@@ -130,3 +130,4 @@ python demo.py
 
 El script instanciará los portales, realizará marcaciones, registrará solicitudes y mostrará en consola los indicadores clave tanto para colaboradores como para el panel admin.
 
+
