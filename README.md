@@ -108,3 +108,26 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Transparencia en el uso de horas extra y compensaciones.
 - Información actualizada para decisiones operativas y de talento.
 - Reducción de cálculos manuales y minimización de errores de registro.
+
+## Implementación de referencia
+
+El repositorio incluye una implementación Python ligera que modela todas las reglas anteriores:
+
+- `app_kimce/models.py`: define colaboradores, solicitudes, feriados, entradas de tiempo y eventos de calendario.
+- `app_kimce/portal.py`: encapsula las acciones disponibles para cada colaborador (marcaciones, solicitudes, indicadores semanales, historial, etc.).
+- `app_kimce/admin.py`: concentra las herramientas administrativas para gestionar feriados, aprobar solicitudes, ajustar horas, construir calendarios y exportar historiales.
+- `app_kimce/calendar.py`: genera vistas mensuales/por colaborador y carga general del equipo.
+- `app_kimce/analytics.py`: ofrece métricas agregadas como horas trabajadas vs. esperadas, deuda/a favor y ranking de puntualidad.
+- `demo.py`: script de ejemplo que crea dos colaboradores, simula marcaciones, cursa solicitudes y las aprueba para demostrar los flujos básicos.
+
+### Requisitos
+
+- Python 3.11+ (solo dependencias estándar).
+
+### Uso rápido
+
+```bash
+python demo.py
+```
+
+El script instanciará los portales, realizará marcaciones, registrará solicitudes y mostrará en consola los indicadores clave tanto para colaboradores como para el panel admin.
