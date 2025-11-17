@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Panel Admin</h1>
+<section class="card">
+  <h2>Salud del equipo</h2>
+  <p>Horas a favor: {{ '%.2f'|format(summary.horas_a_favor) }}h</p>
+  <p>Horas en deuda: {{ '%.2f'|format(summary.horas_deuda) }}h</p>
+</section>
+<section class="card" style="margin-top:1.5rem;">
+  <h2>Feriados</h2>
+  {% if holidays %}
+  <ul>
+    {% for holiday in holidays %}
+    <li>{{ holiday.day }} · {{ holiday.name }} ({{ 'Pagado' if holiday.paid else 'No pagado' }})</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>Sin feriados configurados.</p>
+  {% endif %}
+  <form method="post" action="/admin/feriados" style="margin-top:1rem;">
+    <label>Nombre<input type="text" name="name" required /></label>
+    <label>Fecha<input type="date" name="day" required /></label>
+    <label><input type="checkbox" name="paid" checked /> Pagado</label>
+    <label><input type="checkbox" name="compensable" /> Compensable</label>
+    <button type="submit">Agregar feriado</button>
+  </form>
+</section>
+<section class="card" style="margin-top:1.5rem;">
+  <h2>Solicitudes pendientes</h2>
+  {% if requests %}
+  <table>
+    <thead>
+      <tr>
+        <th>Colaborador</th>
+        <th>Tipo</th>
+        <th>Payload</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in requests %}
+      <tr>
+        <td>{{ req.collaborator_id }}</td>
+        <td>{{ req.request_type.value }}</td>
+        <td><pre style="white-space:pre-wrap; font-size:0.9rem;">{{ req.payload|tojson(indent=2) }}</pre></td>
+        <td>
+          <form method="post" action="/admin/solicitudes/{{ req.request_id }}">
+            <select name="action" required>
+              <option value="approve">Aprobar</option>
+              <option value="reject">Rechazar</option>
+              <option value="correction">Corrección</option>
+            </select>
+            <input type="text" name="comment" placeholder="Comentario" />
+            <button type="submit">Actualizar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No hay solicitudes pendientes.</p>
+  {% endif %}
+</section>
+<section class="card" style="margin-top:1.5rem;">
+  <h2>Calendario del mes</h2>
+  {% if calendar %}
+  <table>
+    <thead>
+      <tr>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Título</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in calendar %}
+      <tr>
+        <td>{{ event.start }}</td>
+        <td>{{ event.end }}</td>
+        <td>{{ event.title }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No hay eventos registrados.</p>
+  {% endif %}
+</section>
+{% endblock %}

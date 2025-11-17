@@ -97,6 +97,7 @@ class Request:
     request_type: RequestType
     created_at: datetime
     payload: Dict[str, str]
+
     status: RequestStatus = RequestStatus.PENDING
     reviewer: Optional[str] = None
     comments: List[str] = field(default_factory=list)

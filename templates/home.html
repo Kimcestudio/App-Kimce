@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Vista general</h1>
+<div class="card-grid">
+  {% for item in collaborator_cards %}
+  <article class="card">
+    <h2>{{ item.collaborator.full_name }}</h2>
+    <p>ID: {{ item.collaborator.collaborator_id }}</p>
+    <p>
+      Indicador semanal:
+      <span class="indicator-pill {{ item.indicator }}">{{ item.indicator }}</span>
+    </p>
+    <ul>
+      <li>Horas trabajadas: {{ '%.2f'|format(item.summary.horas_trabajadas) }}h</li>
+      <li>Horas esperadas: {{ '%.2f'|format(item.summary.horas_esperadas) }}h</li>
+      <li>Horas extra: {{ '%.2f'|format(item.summary.horas_extra) }}h</li>
+    </ul>
+    <a href="/colaborador/{{ item.collaborator.collaborator_id }}">Ir al portal →</a>
+  </article>
+  {% endfor %}
+</div>
+<section class="card" style="margin-top:2rem;">
+  <h2>Resumen Admin</h2>
+  <p>Horas a favor del equipo: {{ '%.2f'|format(admin_summary.horas_a_favor) }}h</p>
+  <p>Horas deuda del equipo: {{ '%.2f'|format(admin_summary.horas_deuda) }}h</p>
+  <h3>Feriados configurados</h3>
+  {% if holidays %}
+  <ul>
+    {% for holiday in holidays %}
+    <li>{{ holiday.day }} · {{ holiday.name }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>No hay feriados cargados aún.</p>
+  {% endif %}
+</section>
+{% endblock %}
