@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="tag">Admin</p>
+  <h1>Panel de control</h1>
+  <p>
+    Gestiona feriados, revisa solicitudes pendientes y monitorea el calendario del equipo en
+    un entorno optimizado con énfasis en tonos azules y componentes modernos.
+  </p>
+</section>
+<section class="stat-grid" style="margin:2rem 0 1rem;">
+  <div class="stat-card">
+    <p class="stat-label">Horas a favor del equipo</p>
+    <p class="stat-value">{{ '%.2f'|format(summary.horas_a_favor) }}h</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas en deuda</p>
+    <p class="stat-value">{{ '%.2f'|format(summary.horas_deuda) }}h</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Solicitudes pendientes</p>
+    <p class="stat-value">{{ requests|length }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Feriados activos</p>
+    <p class="stat-value">{{ holidays|length }}</p>
+  </div>
+</section>
+<section class="card">
+  <h2>Solicitudes de acceso por correo</h2>
+  <p class="page-subtitle">Aprueba o deniega el ingreso a la plataforma</p>
+  {% if access_requests %}
+  <table>
+    <thead>
+      <tr>
+        <th>Correo</th>
+        <th>Colaborador</th>
+        <th>Estado</th>
+        <th>Creado</th>
+        <th>Última revisión</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in access_requests %}
+      <tr>
+        <td>{{ req.email }}</td>
+        <td>{{ req.collaborator_name }} ({{ req.collaborator_id }})</td>
+        <td><span class="tag">{{ req.status.value }}</span></td>
+        <td>{{ req.created_at.strftime('%d/%m %H:%M') }}</td>
+        <td>{{ req.updated_at.strftime('%d/%m %H:%M') if req.updated_at else '—' }}</td>
+        <td>
+          {% if req.status == AccessStatus.PENDING %}
+          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" style="display:flex; gap:0.5rem;">
+            <button type="submit" name="action" value="approve">Aprobar</button>
+            <button type="submit" name="action" value="deny" class="ghost-link" style="color:#b91c1c;">Denegar</button>
+          </form>
+          {% else %}
+          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" style="display:flex; gap:0.5rem;">
+            <button type="submit" name="action" value="approve">Reactivar</button>
+            <button type="submit" name="action" value="deny" class="ghost-link" style="color:#b91c1c;">Bloquear</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#475569;">No hay solicitudes de acceso registradas.</p>
+  {% endif %}
+</section>
+<div class="card-grid" style="margin-top:1.5rem;">
+  <section class="card">
+    <h2>Feriados y días especiales</h2>
+    {% if holidays %}
+    <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:0.5rem; margin:1rem 0;">
+      {% for holiday in holidays %}
+      <li>
+        <strong>{{ holiday.day }}</strong> · {{ holiday.name }}
+        <span class="tag" style="margin-left:0.5rem;">{{ 'Pagado' if holiday.paid else 'No pagado' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="color:#475569;">Sin feriados configurados.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('admin_create_holiday') }}" style="margin-top:1.5rem;">
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <label>Nombre<input type="text" name="name" required /></label>
+        <label>Fecha<input type="date" name="day" required /></label>
+        <label style="flex-direction:row; align-items:center; gap:0.4rem;">
+          <input type="checkbox" name="paid" checked /> Pagado
+        </label>
+        <label style="flex-direction:row; align-items:center; gap:0.4rem;">
+          <input type="checkbox" name="compensable" /> Compensable
+        </label>
+      </div>
+      <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+        <button type="submit">Agregar feriado</button>
+      </div>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Solicitudes pendientes</h2>
+    {% if requests %}
+    <table>
+      <thead>
+        <tr>
+          <th>Colaborador</th>
+          <th>Tipo</th>
+          <th>Detalle</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>{{ req.collaborator_id }}</td>
+          <td>{{ req.request_type.value }}</td>
+          <td><pre style="white-space:pre-wrap; font-size:0.85rem; margin:0;">{{ req.payload|tojson(indent=2) }}</pre></td>
+          <td>
+            <form method="post" action="{{ url_for('admin_request_action', request_id=req.request_id) }}">
+              <select name="action" required>
+                <option value="approve">Aprobar</option>
+                <option value="reject">Rechazar</option>
+                <option value="correction">Corrección</option>
+              </select>
+              <input type="text" name="comment" placeholder="Comentario" />
+              <button type="submit">Actualizar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#475569;">No hay solicitudes pendientes.</p>
+    {% endif %}
+  </section>
+</div>
+<section class="card" id="calendario" style="margin-top:2rem;">
+  <h2>Calendario del mes</h2>
+  {% if calendar %}
+  <table>
+    <thead>
+      <tr>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Título</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in calendar %}
+      <tr>
+        <td>{{ event.start }}</td>
+        <td>{{ event.end }}</td>
+        <td>{{ event.title }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#475569;">No hay eventos registrados.</p>
+  {% endif %}
+</section>
+{% endblock %}
