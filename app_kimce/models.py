@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from typing import Dict, List, Optional
-from uuid import uuid4
+
 
 
 class RequestType(str, Enum):
@@ -98,7 +98,7 @@ class Request:
     request_type: RequestType
     created_at: datetime
     payload: Dict[str, str]
-    request_id: str = field(default_factory=lambda: uuid4().hex)
+
     status: RequestStatus = RequestStatus.PENDING
     reviewer: Optional[str] = None
     comments: List[str] = field(default_factory=list)
