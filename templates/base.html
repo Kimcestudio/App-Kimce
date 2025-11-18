@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kimce Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #0f172a;
+        background: #eef4ff;
+        --blue-25: #f4f7ff;
+        --blue-50: #e4edff;
+        --blue-100: #cbdafe;
+        --blue-300: #7db6ff;
+        --blue-500: #3a7bff;
+        --blue-600: #2c5bd8;
+        --blue-900: #0f2453;
+        --slate-700: #1e293b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top, #ffffff 0%, #eef4ff 45%, #dfe8ff 100%);
+        color: #0f172a;
+      }
+      a {
+        color: var(--blue-600);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #eaf1ff;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, #eaf1ff 90%);
+        border-bottom: 1px solid rgba(25, 64, 152, 0.08);
+        padding: 0.85rem clamp(1rem, 4vw, 3rem);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: clamp(1rem, 3vw, 2.5rem);
+        box-shadow: 0 10px 30px rgba(15, 36, 83, 0.05);
+        backdrop-filter: blur(12px);
+      }
+      .brand {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+      }
+      .brand__title {
+        font-size: 1.4rem;
+        letter-spacing: 0.15em;
+        color: var(--blue-900);
+      }
+      .brand__subtitle {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.6em;
+        text-transform: uppercase;
+        color: #5c6b8f;
+      }
+      .primary-nav {
+        display: flex;
+        gap: 1.6rem;
+        justify-content: center;
+        font-weight: 500;
+      }
+      .primary-nav a {
+        color: #1f3b6d;
+        text-decoration: none;
+        font-size: 0.95rem;
+        position: relative;
+        padding-bottom: 0.2rem;
+      }
+      .primary-nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 2px;
+        background: transparent;
+        transition: background 0.2s ease, transform 0.2s ease;
+        transform-origin: left;
+      }
+      .primary-nav a:hover::after,
+      .primary-nav a:focus::after {
+        background: var(--blue-500);
+        transform: scaleX(1);
+      }
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .pill-button {
+        border-radius: 999px;
+        padding: 0.4rem 1.1rem;
+        border: 1px solid rgba(58, 123, 255, 0.4);
+        background: rgba(58, 123, 255, 0.08);
+        color: var(--blue-700, #1b3b81);
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .pill-button:hover,
+      .pill-button:focus {
+        background: rgba(58, 123, 255, 0.18);
+        color: var(--blue-900);
+      }
+      .user-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding-left: 0.9rem;
+        border-left: 1px solid rgba(15, 36, 83, 0.12);
+      }
+      .user-meta small {
+        display: block;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .user-meta strong {
+        display: block;
+        color: #0f2453;
+        font-size: 0.95rem;
+      }
+      .user-meta a {
+        color: var(--blue-600);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 36, 83, 0.15);
+        background: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--blue-900);
+        box-shadow: 0 8px 20px rgba(15, 36, 83, 0.12);
+      }
+      .icon-button svg {
+        width: 18px;
+        height: 18px;
+      }
+      .logout-button {
+        border-radius: 999px;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        background: rgba(248, 113, 113, 0.12);
+        color: #b91c1c;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.35rem 1rem;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      }
+      .logout-button:hover,
+      .logout-button:focus {
+        background: #dc2626;
+        color: white;
+        border-color: #b91c1c;
+      }
+      main {
+        padding: 2.5rem clamp(1rem, 4vw, 3.5rem);
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #475569;
+        margin-bottom: 0.75rem;
+      }
+      .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .page-header h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 2.5vw, 2.3rem);
+        color: var(--blue-900);
+      }
+      .page-subtitle {
+        color: #475569;
+        margin-top: 0.2rem;
+      }
+      .hero {
+        background: white;
+        border-radius: 1.5rem;
+        padding: clamp(1.5rem, 3vw, 2.5rem);
+        box-shadow: 0 30px 80px rgba(15, 36, 83, 0.08);
+        border: 1px solid rgba(58, 123, 255, 0.1);
+      }
+      .hero h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: clamp(1.6rem, 3vw, 2.4rem);
+      }
+      .hero p {
+        margin: 0;
+        color: #475569;
+        max-width: 600px;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+      .card {
+        background: white;
+        border-radius: 1.2rem;
+        padding: 1.5rem;
+        box-shadow: 0 12px 40px rgba(15, 36, 83, 0.08);
+        border: 1px solid rgba(58, 123, 255, 0.12);
+      }
+      .card h2 {
+        margin-top: 0;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 1rem;
+      }
+      .stat-card {
+        background: linear-gradient(160deg, #ffffff 0%, #edf2ff 100%);
+        border-radius: 1rem;
+        padding: 1rem 1.2rem;
+        border: 1px solid rgba(58, 123, 255, 0.15);
+      }
+      .stat-card p {
+        margin: 0;
+      }
+      .stat-label {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--blue-900);
+        margin-top: 0.2rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      table th,
+      table td {
+        padding: 0.7rem;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        text-align: left;
+      }
+      table thead th {
+        color: #475569;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      table tbody tr:hover {
+        background: rgba(58, 123, 255, 0.05);
+      }
+      .indicator-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        color: white;
+      }
+      .indicator-pill.verde {
+        background: linear-gradient(120deg, #22c55e, #16a34a);
+      }
+      .indicator-pill.rojo {
+        background: linear-gradient(120deg, #ef4444, #dc2626);
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 500;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        padding: 0.65rem 0.85rem;
+        border-radius: 0.8rem;
+        border: 1px solid rgba(15, 23, 42, 0.15);
+        background: #fff;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid rgba(58, 123, 255, 0.6);
+        border-color: transparent;
+      }
+      button {
+        background: linear-gradient(120deg, var(--blue-600), var(--blue-500));
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(58, 123, 255, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 15px 30px rgba(58, 123, 255, 0.35);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+      }
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.75rem;
+      }
+      .quick-actions button {
+        border-radius: 999px;
+        text-transform: none;
+      }
+      .action-hint {
+        margin-top: 0.4rem;
+        font-size: 0.85rem;
+        color: #475569;
+      }
+      .button-secondary {
+        background: transparent;
+        color: var(--blue-600);
+        border: 1px solid rgba(58, 123, 255, 0.4);
+        box-shadow: none;
+      }
+      .flash {
+        margin-bottom: 1rem;
+        padding: 0.85rem 1rem;
+        border-radius: 0.9rem;
+        font-weight: 500;
+      }
+      .flash.success {
+        background: #dcfce7;
+        color: #14532d;
+      }
+      .flash.error {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.6rem;
+        background: var(--blue-50);
+        color: var(--blue-600);
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+      .ghost-link {
+        color: #0f172a;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      .ghost-link svg {
+        width: 1rem;
+        height: 1rem;
+      }
+      @media (max-width: 640px) {
+        header {
+          grid-template-columns: 1fr;
+          gap: 0.8rem;
+        }
+        .primary-nav {
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+        .topbar-actions {
+          flex-wrap: wrap;
+        }
+        .user-meta {
+          width: 100%;
+          padding-left: 0;
+          border-left: none;
+          justify-content: space-between;
+        }
+        .card,
+        .hero {
+          padding: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="brand__title">KIMCE</span>
+        <span class="brand__subtitle">STUDIO</span>
+      </div>
+      <nav class="primary-nav">
+        <a href="/">Horarios</a>
+        <a href="/admin">Historial</a>
+        <a href="/admin#calendario">Calendario</a>
+      </nav>
+      <div class="topbar-actions">
+        <a class="pill-button" href="/admin">Admin</a>
+        <a class="pill-button" href="/colaborador/COL-001">Mis semanas</a>
+        <div class="user-meta">
+          <div>
+            <small>Hola</small>
+            <strong>Kimce Studio</strong>
+            <a href="/admin#equipo">Alegría</a>
+          </div>
+          <button class="logout-button" type="button">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+    <main>
+      {% with flashes = get_flashed_messages(with_categories=True) %}
+      {% if flashes %}
+      {% for category, message in flashes %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock content %}
+    </main>
+  </body>
+</html>
