@@ -122,7 +122,18 @@ El repositorio incluye una implementación Python ligera que modela todas las re
 
 ### Requisitos
 
+- Python 3.11+
+- Dependencias listadas en `requirements.txt` (actualmente solo Flask para la UI).
 
+Instala todo con:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Modos de uso
+
+#### Demo en consola
 
 ```bash
 python demo.py
@@ -130,4 +141,31 @@ python demo.py
 
 El script instanciará los portales, realizará marcaciones, registrará solicitudes y mostrará en consola los indicadores clave tanto para colaboradores como para el panel admin.
 
+#### UI web mínima
 
+Se incluyó `webapp.py`, una aplicación Flask que renderiza la vista del colaborador y del admin usando las plantillas en `templates/`.
+
+```bash
+python webapp.py
+```
+
+El comando imprime la URL base una vez que el servidor está disponible.
+
+Luego abre <http://localhost:5000> para:
+
+- Revisar la “tarjeta” semanal de cada colaborador.
+- Registrar marcaciones y generar solicitudes con formularios funcionales.
+- Gestionar las solicitudes desde `/admin`, aprobar/rechazar y agregar feriados con formularios reales.
+- Visualizar el calendario mensual y los indicadores de horas a favor/deuda en tiempo real.
+
+El servidor usa datos demo en memoria y sirve como base para iterar el diseño visual o conectar un backend persistente más adelante.
+
+##### Compartirlo mediante un enlace
+
+Si quieres que otras personas lo vean desde su navegador, expón el servidor en toda la red local:
+
+```bash
+python webapp.py --host 0.0.0.0 --port 8080
+```
+
+La terminal mostrará la URL `http://0.0.0.0:8080` y, además, un enlace usando la IP real de tu máquina (por ejemplo `http://192.168.0.12:8080`). Comparte ese enlace dentro de tu red o reemplázalo por tu IP pública si necesitas acceso remoto (idealmente detrás de un túnel seguro como ngrok o Cloudflare Tunnel).
