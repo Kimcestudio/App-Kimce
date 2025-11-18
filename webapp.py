@@ -64,6 +64,7 @@ def collaborator_view(collaborator_id: str) -> str:
     portal = collaborator_portals[collaborator_id]
     collaborator = portal.collaborator
     entries = sorted(collaborator.history.time_entries, key=lambda e: e.day, reverse=True)
+    today = date.today()
     return render_template(
         "collaborator.html",
         collaborator=collaborator,
@@ -73,6 +74,8 @@ def collaborator_view(collaborator_id: str) -> str:
         entries=entries,
         requests=portal.request_history(),
         RequestType=RequestType,
+        action_state=portal.action_availability(today),
+        today=today,
     )
 
 

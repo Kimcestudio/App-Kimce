@@ -39,6 +39,8 @@ class CollaboratorPortal:
         entry = self._get_entry(ts.date())
         if not entry.check_in or entry.break_start:
             raise FlowError("No se puede iniciar descanso sin entrada o si ya fue registrado")
+        if entry.check_out:
+            raise FlowError("La jornada ya fue cerrada para este día")
         entry.break_start = ts
         if note:
             entry.add_note(note)
@@ -48,6 +50,8 @@ class CollaboratorPortal:
         entry = self._get_entry(ts.date())
         if not entry.break_start or entry.break_end:
             raise FlowError("No se puede finalizar descanso sin inicio previo")
+        if entry.check_out:
+            raise FlowError("La jornada ya fue cerrada para este día")
         entry.break_end = ts
         if note:
             entry.add_note(note)
@@ -109,6 +113,28 @@ class CollaboratorPortal:
         return entry
 
     # --- Utilidades ------------------------------------------------------
+    def action_availability(self, day: date) -> Dict[str, bool]:
+        """Expone qué botones deben estar habilitados para un día dado."""
+
+        entry = next((e for e in self.collaborator.history.time_entries if e.day == day), None)
+        if not entry:
+            return {
+                "entrada": True,
+                "descanso_inicio": False,
+                "descanso_fin": False,
+                "salida": False,
+                "bloqueado": False,
+            }
+
+        locked = bool(entry.check_out)
+        return {
+            "entrada": entry.check_in is None,
+            "descanso_inicio": bool(entry.check_in and not entry.break_start and not entry.check_out),
+            "descanso_fin": bool(entry.break_start and not entry.break_end and not entry.check_out),
+            "salida": bool(entry.check_in and not entry.check_out),
+            "bloqueado": locked,
+        }
+
     def weekly_indicator(self, week_start: date) -> str:
         summary = self.week_summary(week_start)
         return "verde" if summary["horas_trabajadas"] >= summary["horas_esperadas"] else "rojo"

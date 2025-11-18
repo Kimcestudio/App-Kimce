@@ -341,6 +341,26 @@
         transform: translateY(-1px);
         box-shadow: 0 15px 30px rgba(58, 123, 255, 0.35);
       }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+      }
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.75rem;
+      }
+      .quick-actions button {
+        border-radius: 999px;
+        text-transform: none;
+      }
+      .action-hint {
+        margin-top: 0.4rem;
+        font-size: 0.85rem;
+        color: #475569;
+      }
       .button-secondary {
         background: transparent;
         color: var(--blue-600);
