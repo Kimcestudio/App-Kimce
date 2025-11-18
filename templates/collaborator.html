@@ -1,109 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="breadcrumb">
-  <a class="ghost-link" href="/">← Inicio</a>
-  <span>/</span>
-  <span>Portal del colaborador</span>
-</div>
-<section class="page-header">
-  <div>
-    <h1>{{ collaborator.full_name }}</h1>
-    <p class="page-subtitle">ID {{ collaborator.collaborator_id }}</p>
-  </div>
-  <span class="indicator-pill {{ indicator }}">{{ indicator }}</span>
-</section>
-<section class="stat-grid" style="margin-bottom:2rem;">
-  <div class="stat-card">
-    <p class="stat-label">Horas trabajadas</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_trabajadas) }}h</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas esperadas</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_esperadas) }}h</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas extra</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_extra) }}h</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas faltantes</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_faltantes) }}h</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas a favor</p>
-    <p class="stat-value">{{ '%.2f'|format(balance.horas_a_favor) }}h</p>
-  </div>
-</section>
-<div class="card-grid" style="margin-bottom:2rem;">
-  <section class="card">
-    <h2>Marcaciones rápidas</h2>
-    <form method="post" action="/colaborador/{{ collaborator.collaborator_id }}/marcar">
-      <label>
-        Acción
-        <select name="action" required>
-          <option value="entrada">Entrada</option>
-          <option value="descanso_inicio">Inicio descanso</option>
-          <option value="descanso_fin">Fin descanso</option>
-          <option value="salida">Salida</option>
-        </select>
-      </label>
-      <label>
-        Observación (opcional)
-        <input type="text" name="note" placeholder="Ej. Activación con cliente" />
-      </label>
-      <button type="submit">Registrar marcación</button>
-    </form>
-  </section>
-  <section class="card">
-    <h2>My Week Card</h2>
-    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.6rem;">
-      <li>Horas trabajadas: <strong>{{ '%.2f'|format(summary.horas_trabajadas) }}h</strong></li>
-      <li>Horas esperadas: <strong>{{ '%.2f'|format(summary.horas_esperadas) }}h</strong></li>
-      <li>Horas extra generadas: <strong>{{ '%.2f'|format(summary.horas_extra) }}h</strong></li>
-      <li>Horas faltantes: <strong>{{ '%.2f'|format(summary.horas_faltantes) }}h</strong></li>
-      <li>Horas a favor acumuladas: <strong>{{ '%.2f'|format(balance.horas_a_favor) }}h</strong></li>
-    </ul>
-  </section>
-</div>
-<section class="card" style="margin-bottom:2rem;">
-  <h2>Solicitudes</h2>
-  <p class="page-subtitle" style="margin-bottom:1rem;">Vacaciones, permisos, horas extra y actividades especiales</p>
-  <form method="post" action="/colaborador/{{ collaborator.collaborator_id }}/solicitud">
-    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-      <label>
-        Tipo
-        <select name="request_type" required>
-          {% for option in RequestType %}
-          <option value="{{ option.value }}">{{ option.value }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label>
-        Inicio
-        <input type="datetime-local" name="start" />
-      </label>
-      <label>
-        Fin
-        <input type="datetime-local" name="end" />
-      </label>
-      <label>
-        Horas (extra o uso de saldo)
-        <input type="number" step="0.5" name="hours" />
-      </label>
-      <label>
-        Actividad especial
-        <input type="text" name="activity" placeholder="Activación / evento" />
-      </label>
-      <label>
-        Notas
-        <textarea name="notes" rows="2"></textarea>
-      </label>
-    </div>
-    <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
-      <button type="submit">Enviar solicitud</button>
-    </div>
-  </form>
-  <h3 style="margin-top:2rem;">Historial</h3>
+
   {% if requests %}
   <table>
     <thead>
@@ -118,16 +15,13 @@
       <tr>
         <td>{{ req[0].value }}</td>
         <td>{{ req[1].value }}</td>
-        <td><pre style="white-space:pre-wrap; font-size:0.85rem; margin:0;">{{ req[2]|tojson(indent=2) }}</pre></td>
+
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <p style="color:#475569;">No hay solicitudes todavía.</p>
-  {% endif %}
-</section>
-<section class="card">
+
   <h2>Marcaciones recientes</h2>
   {% if entries %}
   <table>
@@ -146,11 +40,7 @@
         <td>{{ entry.day }}</td>
         <td>{{ entry.check_in or '-' }}</td>
         <td>
-          {% if entry.break_start %}
-          {{ entry.break_start }} - {{ entry.break_end or 'pendiente' }}
-          {% else %}
-          -
-          {% endif %}
+
         </td>
         <td>{{ entry.check_out or '-' }}</td>
         <td>{{ entry.notes|join(', ') }}</td>
@@ -159,7 +49,7 @@
     </tbody>
   </table>
   {% else %}
-  <p style="color:#475569;">Aún no registraste marcaciones.</p>
+
   {% endif %}
 </section>
 {% endblock %}
