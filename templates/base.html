@@ -14,19 +14,23 @@
       :root {
         font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         color: #0f172a;
-        background: #eef4ff;
-        --blue-25: #f4f7ff;
-        --blue-50: #e4edff;
-        --blue-100: #cbdafe;
-        --blue-300: #7db6ff;
-        --blue-500: #3a7bff;
-        --blue-600: #2c5bd8;
-        --blue-900: #0f2453;
-        --green-500: #22c55e;
-        --green-600: #16a34a;
-        --amber-500: #f59e0b;
-        --amber-600: #d97706;
+        background: #eef2f8;
+        --blue-25: #f6f8ff;
+        --blue-50: #e8edfb;
+        --blue-100: #cfd9f4;
+        --blue-300: #9cb3ea;
+        --blue-500: #5078d6;
+        --blue-600: #2f5fbf;
+        --blue-900: #132a63;
+        --green-100: #d7f3e3;
+        --green-500: #2f9e53;
+        --green-600: #257d42;
+        --amber-100: #fdf0d8;
+        --amber-500: #ef9e28;
+        --amber-600: #c97714;
+        --slate-50: #f8fafc;
         --slate-100: #e2e8f0;
+        --slate-400: #94a3b8;
         --slate-700: #1e293b;
       }
       * {
@@ -35,7 +39,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(circle at top, #ffffff 0%, #eef4ff 45%, #dfe8ff 100%);
+        background: radial-gradient(circle at top, #ffffff 0%, #eef2f8 45%, #dfe6f5 100%);
         color: #0f172a;
       }
       a {
@@ -45,9 +49,9 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        background: #eaf1ff;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, #eaf1ff 90%);
-        border-bottom: 1px solid rgba(25, 64, 152, 0.08);
+        background: #e8edfb;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, #e8edfb 90%);
+        border-bottom: 1px solid rgba(25, 64, 152, 0.06);
         padding: 0.85rem clamp(1rem, 4vw, 3rem);
         display: grid;
         grid-template-columns: auto 1fr auto;
@@ -110,16 +114,16 @@
       .pill-button {
         border-radius: 999px;
         padding: 0.4rem 1.1rem;
-        border: 1px solid rgba(58, 123, 255, 0.4);
-        background: rgba(58, 123, 255, 0.08);
-        color: var(--blue-700, #1b3b81);
+        border: 1px solid rgba(47, 95, 191, 0.25);
+        background: rgba(47, 95, 191, 0.08);
+        color: var(--blue-900);
         font-weight: 600;
         text-decoration: none;
         transition: background 0.2s ease, color 0.2s ease;
       }
       .pill-button:hover,
       .pill-button:focus {
-        background: rgba(58, 123, 255, 0.18);
+        background: rgba(47, 95, 191, 0.18);
         color: var(--blue-900);
       }
       .user-meta {
@@ -334,21 +338,21 @@
       input:focus,
       select:focus,
       textarea:focus {
-        outline: 2px solid rgba(58, 123, 255, 0.6);
+        outline: 2px solid rgba(47, 95, 191, 0.5);
         border-color: transparent;
       }
       button {
-        background: linear-gradient(120deg, var(--blue-600), var(--blue-500));
+        background: linear-gradient(120deg, #2f5fbf, #4f7fd8);
         color: white;
-        border: none;
+        border: 1px solid rgba(47, 95, 191, 0.35);
         font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 10px 25px rgba(58, 123, 255, 0.35);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 8px 18px rgba(47, 95, 191, 0.18);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
       button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 15px 30px rgba(58, 123, 255, 0.35);
+        box-shadow: 0 12px 28px rgba(47, 95, 191, 0.22);
       }
       button:disabled {
         opacity: 0.5;
@@ -364,18 +368,34 @@
       .quick-actions button {
         border-radius: 999px;
         text-transform: none;
+        border: 1px solid #d0d7ea;
+        box-shadow: none;
       }
       .quick-actions .btn-entry {
-        background: linear-gradient(120deg, var(--blue-600), var(--blue-500));
+        background: #2f9e53;
+        border-color: #257d42;
+        box-shadow: 0 8px 16px rgba(47, 158, 83, 0.18);
       }
       .quick-actions .btn-break-start {
-        background: linear-gradient(120deg, var(--green-600), var(--green-500));
+        background: #ef9e28;
+        color: #2c1904;
+        border-color: rgba(239, 158, 40, 0.65);
+        box-shadow: 0 8px 16px rgba(239, 158, 40, 0.18);
       }
       .quick-actions .btn-break-end {
-        background: linear-gradient(120deg, var(--amber-600), var(--amber-500));
+        background: #cf7f12;
+        border-color: rgba(207, 127, 18, 0.75);
+        box-shadow: 0 8px 16px rgba(207, 127, 18, 0.18);
       }
       .quick-actions .btn-exit {
-        background: linear-gradient(120deg, #0f172a, #1f2937);
+        background: #0f172a;
+        border-color: rgba(15, 23, 42, 0.4);
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.25);
+      }
+      .quick-actions button:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        border-color: #e2e8f0;
       }
       .pill-list {
         list-style: none;
@@ -423,7 +443,7 @@
       .button-secondary {
         background: transparent;
         color: var(--blue-600);
-        border: 1px solid rgba(58, 123, 255, 0.4);
+        border: 1px solid rgba(47, 95, 191, 0.35);
         box-shadow: none;
       }
       .flash {
@@ -461,6 +481,74 @@
       .ghost-link svg {
         width: 1rem;
         height: 1rem;
+      }
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: var(--slate-50);
+        color: #0f172a;
+      }
+      .status-chip.green {
+        background: var(--green-100);
+        border-color: rgba(37, 125, 66, 0.25);
+        color: #1f7a3d;
+      }
+      .status-chip.amber {
+        background: var(--amber-100);
+        border-color: rgba(207, 127, 18, 0.3);
+        color: #8a5307;
+      }
+      .status-chip.gray {
+        background: #eef2f8;
+        border-color: #e2e8f0;
+        color: #475569;
+      }
+      .access-grid {
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 1rem;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 12px 32px rgba(15, 36, 83, 0.06);
+      }
+      .access-grid table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .access-grid th,
+      .access-grid td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #edf2f7;
+      }
+      .access-grid th {
+        text-align: left;
+        color: #475569;
+        font-weight: 700;
+        background: #f8fbff;
+        font-size: 0.9rem;
+      }
+      .access-grid tr:last-child td {
+        border-bottom: none;
+      }
+      .pill-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: #eef2f8;
+        color: #1f3b6d;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+      .pill-count.pending {
+        background: #fff7ed;
+        color: #c97714;
       }
       @media (max-width: 640px) {
         header {

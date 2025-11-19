@@ -211,6 +211,7 @@ def collaborator_view(collaborator_id: str) -> str:
     collaborator = portal.collaborator
     entries = sorted(collaborator.history.time_entries, key=lambda e: e.day, reverse=True)
     today = date.today()
+    today_entry = next((e for e in collaborator.history.time_entries if e.day == today), None)
     return render_template(
         "collaborator.html",
         collaborator=collaborator,
@@ -221,6 +222,7 @@ def collaborator_view(collaborator_id: str) -> str:
         requests=portal.request_history(),
         RequestType=RequestType,
         action_state=portal.action_availability(today),
+        today_entry=today_entry,
         today=today,
     )
 
@@ -283,15 +285,18 @@ def admin_view() -> str:
     pending = admin_portal.pending_requests()
     today = date.today()
     calendar = admin_portal.build_calendar(today.month, today.year)
+    access_list = sorted(access_requests.values(), key=lambda req: req.created_at, reverse=True)
     return render_template(
         "admin.html",
         requests=pending,
         calendar=calendar,
         summary=admin_portal.hours_balance_summary(),
         holidays=admin_portal.list_holidays(),
-        access_requests=sorted(
-            access_requests.values(), key=lambda req: req.created_at, reverse=True
-        ),
+        access_requests=access_list,
+        access_counts={
+            "total": len(access_list),
+            "pending": sum(1 for req in access_list if req.status == AccessStatus.PENDING),
+        },
         AccessStatus=AccessStatus,
         Role=Role,
     )

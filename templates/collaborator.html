@@ -35,8 +35,26 @@
   </div>
 </section>
 <section class="card" style="margin-bottom:2rem;">
-  <h2>Marcaciones rápidas</h2>
-  <p class="page-subtitle">{{ today.strftime('%A %d %B %Y')|title }}</p>
+  <div class="page-header" style="align-items:flex-start;">
+    <div>
+      <h2>Marcaciones rápidas</h2>
+      <p class="page-subtitle">{{ today.strftime('%A %d %B %Y')|title }}</p>
+    </div>
+    {% set status_class = 'gray' %}
+    {% set status_label = 'Fuera de jornada' %}
+    {% if today_entry and today_entry.ongoing_break_start %}
+      {% set status_class = 'amber' %}
+      {% set status_label = 'En descanso' %}
+    {% elif today_entry and today_entry.check_in and not today_entry.check_out %}
+      {% set status_class = 'green' %}
+      {% set status_label = 'En jornada' %}
+    {% elif action_state.entrada %}
+      {% set status_label = 'Pendiente de entrada' %}
+    {% elif action_state.bloqueado %}
+      {% set status_label = 'Jornada cerrada' %}
+    {% endif %}
+    <span class="status-chip {{ status_class }}">{{ status_label }}</span>
+  </div>
   <form method="post" action="/colaborador/{{ collaborator.collaborator_id }}/marcar">
     <label>
       Observación (opcional)
@@ -59,6 +77,21 @@
     {% if action_state.bloqueado %}
     <p class="action-hint">Ya registraste tu salida de hoy. Las nuevas marcaciones estarán disponibles mañana.</p>
     {% endif %}
+    <div style="margin-top:1rem; padding:0.85rem 1rem; border:1px solid #e2e8f0; border-radius:0.9rem; background: var(--slate-50);">
+      <p class="page-subtitle" style="margin:0 0 0.5rem 0;">Línea de tiempo</p>
+      {% if today_entry %}
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.25rem; color:#1f2937;">
+        {% if today_entry.check_in %}<li>• {{ today_entry.check_in.strftime('%H:%M') }} · Entrada</li>{% endif %}
+        {% for period in today_entry.break_periods %}
+        <li>• {{ period[0].strftime('%H:%M') }} - {{ period[1].strftime('%H:%M') }} · Descanso</li>
+        {% endfor %}
+        {% if today_entry.ongoing_break_start %}<li>• {{ today_entry.ongoing_break_start.strftime('%H:%M') }} · Descanso en curso</li>{% endif %}
+        {% if today_entry.check_out %}<li>• {{ today_entry.check_out.strftime('%H:%M') }} · Salida</li>{% endif %}
+      </ul>
+      {% else %}
+      <p style="margin:0; color:#475569;">Sin eventos hoy.</p>
+      {% endif %}
+    </div>
   </form>
 </section>
 <section class="card" style="margin-bottom:2rem;">
