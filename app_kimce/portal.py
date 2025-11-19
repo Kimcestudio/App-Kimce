@@ -114,10 +114,10 @@ class CollaboratorPortal:
                 continue
             current = payload_start.date()
             while current <= payload_end.date():
-                if start <= current <= end and current.weekday() < 5:
+                if start <= current <= end and current.weekday() <= 5:
                     absence_days.add(current)
                 current += timedelta(days=1)
-        deducted = self.collaborator.expected_daily_hours * len(absence_days)
+        deducted = sum((self.collaborator.expected_hours_for_day(day) for day in absence_days), timedelta())
         return max(timedelta(0), expected - deducted)
 
     def request_history(self) -> List[Tuple[RequestType, RequestStatus, Dict[str, str]]]:
@@ -171,6 +171,6 @@ class CollaboratorPortal:
             week_id = f"{entry.day.isocalendar().year}-W{entry.day.isocalendar().week:02d}"
             grouped[week_id]["trabajadas"] += entry.worked_timedelta().total_seconds() / 3600
             grouped[week_id]["esperadas"] += (
-                self.collaborator.expected_daily_hours.total_seconds() / 3600
+                self.collaborator.expected_hours_for_day(entry.day).total_seconds() / 3600
             )
         return grouped

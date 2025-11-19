@@ -11,11 +11,11 @@
 <section class="stat-grid" style="margin:2rem 0 1rem;">
   <div class="stat-card">
     <p class="stat-label">Horas a favor del equipo</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_a_favor) }}h</p>
+    <p class="stat-value">{{ summary.horas_a_favor|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Horas en deuda</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_deuda) }}h</p>
+    <p class="stat-value">{{ summary.horas_deuda|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Solicitudes pendientes</p>
@@ -60,36 +60,35 @@
   <section class="card">
     <h2>Solicitudes pendientes</h2>
     {% if requests %}
-    <table>
-      <thead>
-        <tr>
-          <th>Colaborador</th>
-          <th>Tipo</th>
-          <th>Detalle</th>
-          <th>Acción</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for req in requests %}
-        <tr>
-          <td>{{ req.collaborator_id }}</td>
-          <td>{{ req.request_type.value }}</td>
-          <td><pre style="white-space:pre-wrap; font-size:0.85rem; margin:0;">{{ req.payload|tojson(indent=2) }}</pre></td>
-          <td>
-            <form method="post" action="{{ url_for('admin_request_action', request_id=req.request_id) }}">
-              <select name="action" required>
-                <option value="approve">Aprobar</option>
-                <option value="reject">Rechazar</option>
-                <option value="correction">Corrección</option>
-              </select>
-              <input type="text" name="comment" placeholder="Comentario" />
-              <button type="submit">Actualizar</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="stacked-list">
+      {% for req in requests %}
+      <article class="list-row">
+        <div class="list-row__main">
+          <p class="tag ghost">{{ req.collaborator_id }}</p>
+          <div>
+            <h3>{{ req.request_type.value|title }}</h3>
+            {% set start = req.payload.get('inicio') %}
+            {% set end = req.payload.get('fin') %}
+            <p class="page-subtitle">
+              {% if start %}{{ start }}{% if end %} → {{ end }}{% endif %}{% endif %}
+              {% if req.payload.get('hours') %} · {{ req.payload.get('hours')|hhmm }}{% endif %}
+              {% if req.payload.get('activity') %} · {{ req.payload.get('activity') }}{% endif %}
+              {% if req.payload.get('notes') %} · {{ req.payload.get('notes') }}{% endif %}
+            </p>
+          </div>
+        </div>
+        <form method="post" action="{{ url_for('admin_request_action', request_id=req.request_id) }}" class="list-row__actions">
+          <select name="action" required>
+            <option value="approve">Aprobar</option>
+            <option value="reject">Rechazar</option>
+            <option value="correction">Corrección</option>
+          </select>
+          <input type="text" name="comment" placeholder="Comentario" />
+          <button type="submit">Actualizar</button>
+        </form>
+      </article>
+      {% endfor %}
+    </div>
     {% else %}
     <p style="color:#475569;">No hay solicitudes pendientes.</p>
     {% endif %}
@@ -152,7 +151,15 @@
       <tbody>
         {% for req in access_requests %}
         <tr>
-          <td><strong>{{ req.collaborator_name }}</strong><br /><span class="page-subtitle">{{ req.collaborator_id }}</span></td>
+          <td>
+            <div class="access-row__user">
+              <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+              <div>
+                <strong>{{ req.collaborator_name }}</strong><br />
+                <span class="page-subtitle">{{ req.collaborator_id }}</span>
+              </div>
+            </div>
+          </td>
           <td style="word-break:break-all;">{{ req.email }}</td>
           <td>
             {% set status_class = 'gray' %}

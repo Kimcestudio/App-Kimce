@@ -15,23 +15,23 @@
 <section class="stat-grid" style="margin-bottom:2rem;">
   <div class="stat-card">
     <p class="stat-label">Horas trabajadas</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_trabajadas) }}h</p>
+    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Horas esperadas</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_esperadas) }}h</p>
+    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Horas extra</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_extra) }}h</p>
+    <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Horas faltantes</p>
-    <p class="stat-value">{{ '%.2f'|format(summary.horas_faltantes) }}h</p>
+    <p class="stat-value">{{ summary.horas_faltantes|hhmm }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Horas a favor</p>
-    <p class="stat-value">{{ '%.2f'|format(balance.horas_a_favor) }}h</p>
+    <p class="stat-value">{{ balance.horas_a_favor|hhmm }}</p>
   </div>
 </section>
 <section class="card" style="margin-bottom:2rem;">
@@ -173,7 +173,7 @@
       {% for entry in entries %}
       <tr>
         <td>{{ entry.day }}</td>
-        <td>{{ entry.check_in or '-' }}</td>
+        <td>{{ entry.check_in.strftime('%Y-%m-%d %H:%M') if entry.check_in else '-' }}</td>
         <td>
           {% if entry.break_periods %}
           <ul class="pill-list">
@@ -187,7 +187,7 @@
           -
           {% endif %}
         </td>
-        <td>{{ entry.check_out or '-' }}</td>
+        <td>{{ entry.check_out.strftime('%Y-%m-%d %H:%M') if entry.check_out else '-' }}</td>
         <td>{{ entry.notes|join(', ') }}</td>
       </tr>
       {% endfor %}

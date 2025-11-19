@@ -162,19 +162,28 @@ class Collaborator:
     email: str
     position: Optional[str] = None
     role: Role = Role.COLLABORATOR
+    weekday_hours: Dict[int, timedelta] = field(default_factory=dict)
     history: CollaboratorHistory = field(init=False)
 
     def __post_init__(self) -> None:
         self.history = CollaboratorHistory(collaborator_id=self.collaborator_id)
+        if not self.weekday_hours:
+            standard_week = {i: timedelta(hours=8) for i in range(5)}
+            standard_week[5] = timedelta(hours=4)
+            self.weekday_hours = standard_week
+
+    def expected_hours_for_day(self, day: date) -> timedelta:
+        """Devuelve la expectativa para un día concreto (HH:MM)."""
+
+        return self.weekday_hours.get(day.weekday(), timedelta(0))
 
     def expected_hours_between(self, start: date, end: date) -> timedelta:
-        days = sum(1 for _ in self._iter_workdays(start, end))
-        return self.expected_daily_hours * days
+        return sum((self.expected_hours_for_day(day) for day in self._iter_workdays(start, end)), timedelta())
 
     @staticmethod
     def _iter_workdays(start: date, end: date):
         current = start
         while current <= end:
-            if current.weekday() < 5:  # Monday-Friday
+            if current.weekday() <= 5:  # Monday-Saturday
                 yield current
             current += timedelta(days=1)

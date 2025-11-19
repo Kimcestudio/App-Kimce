@@ -26,7 +26,7 @@ def build_demo_state():
         Collaborator(
             "c2",
             "Luis García",
-            timedelta(hours=7.5),
+            timedelta(hours=8),
             "luis@example.com",
             position="Motion",
             role=Role.COLLABORATOR,

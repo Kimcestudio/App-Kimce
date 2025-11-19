@@ -100,6 +100,8 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Bloqueo automático de marcaciones durante vacaciones y autoregistro de feriados.
 - Ajustes automáticos por descansos y validaciones para evitar flujos ilógicos (descansos múltiples por día, entrada/salida bloqueados tras cerrar la jornada).
 - Las vacaciones, permisos y días compensatorios aprobados descuentan las horas esperadas de la semana, evitando que cuenten como deuda.
+- La expectativa semanal se calcula en formato HH:MM (lunes a viernes 08:00, sábado 04:00; domingo no laborable por defecto).
+- Todos los indicadores de horas en la UI muestran el formato HH:MM para facilitar lectura rápida.
 
 ## Experiencia de usuario
 

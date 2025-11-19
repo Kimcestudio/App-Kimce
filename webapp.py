@@ -66,7 +66,7 @@ def _bootstrap_collaborators() -> List[Collaborator]:
         Collaborator(
             "COL-002",
             "Luis Gómez",
-            timedelta(hours=6, minutes=30),
+            timedelta(hours=8),
             "luis@kimce.studio",
             position="Diseñador Senior",
             role=Role.COLLABORATOR,
@@ -100,6 +100,21 @@ for index, collaborator in enumerate(collaborators):
 admin_portal = AdminPortal(collaborators)
 
 
+def _hours_to_hhmm(value) -> str:
+    """Convierte horas (float o timedelta) a HH:MM legibles."""
+
+    if value is None:
+        return "00:00"
+    if isinstance(value, timedelta):
+        total_minutes = int(round(value.total_seconds() / 60))
+    else:
+        total_minutes = int(round(float(value) * 60))
+    sign = "-" if total_minutes < 0 else ""
+    total_minutes = abs(total_minutes)
+    hours, minutes = divmod(total_minutes, 60)
+    return f"{sign}{hours:02d}:{minutes:02d}"
+
+
 def _current_week_start() -> date:
     today = date.today()
     return today - timedelta(days=today.weekday())
@@ -122,6 +137,11 @@ def inject_session_data():
     if collaborator_id and collaborator_id in collaborator_portals:
         collaborator = collaborator_portals[collaborator_id].collaborator
     return {"active_collaborator": collaborator}
+
+
+@app.template_filter("hhmm")
+def format_hhmm(value):
+    return _hours_to_hhmm(value)
 
 
 @app.route("/")

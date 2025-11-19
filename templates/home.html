@@ -27,15 +27,15 @@
     <div class="stat-grid">
       <div class="stat-card">
         <p class="stat-label">Trabajadas</p>
-        <p class="stat-value">{{ '%.1f'|format(item.summary.horas_trabajadas) }}h</p>
+        <p class="stat-value">{{ item.summary.horas_trabajadas|hhmm }}</p>
       </div>
       <div class="stat-card">
         <p class="stat-label">Esperadas</p>
-        <p class="stat-value">{{ '%.1f'|format(item.summary.horas_esperadas) }}h</p>
+        <p class="stat-value">{{ item.summary.horas_esperadas|hhmm }}</p>
       </div>
       <div class="stat-card">
         <p class="stat-label">Extra</p>
-        <p class="stat-value">{{ '%.1f'|format(item.summary.horas_extra) }}h</p>
+        <p class="stat-value">{{ item.summary.horas_extra|hhmm }}</p>
       </div>
     </div>
     <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem;">
@@ -59,11 +59,11 @@
   <div class="stat-grid">
     <div class="stat-card">
       <p class="stat-label">Horas a favor</p>
-      <p class="stat-value">{{ '%.2f'|format(admin_summary.horas_a_favor) }}h</p>
+      <p class="stat-value">{{ admin_summary.horas_a_favor|hhmm }}</p>
     </div>
     <div class="stat-card">
       <p class="stat-label">Horas en deuda</p>
-      <p class="stat-value">{{ '%.2f'|format(admin_summary.horas_deuda) }}h</p>
+      <p class="stat-value">{{ admin_summary.horas_deuda|hhmm }}</p>
     </div>
   </div>
   <h3 style="margin-top:1.5rem;">Feriados configurados</h3>
