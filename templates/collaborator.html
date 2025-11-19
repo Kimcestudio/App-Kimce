@@ -8,7 +8,7 @@
 <section class="page-header">
   <div>
     <h1>{{ collaborator.full_name }}</h1>
-    <p class="page-subtitle">ID {{ collaborator.collaborator_id }}</p>
+    <p class="page-subtitle">ID {{ collaborator.collaborator_id }}{% if collaborator.position %} · {{ collaborator.position }}{% endif %}</p>
   </div>
   <span class="indicator-pill {{ indicator }}">{{ indicator }}</span>
 </section>
@@ -43,16 +43,16 @@
       <input type="text" name="note" placeholder="Ej. Activación con cliente" />
     </label>
     <div class="quick-actions">
-      <button type="submit" name="action" value="entrada" {% if not action_state.entrada %}disabled{% endif %}>
+      <button class="btn-entry" type="submit" name="action" value="entrada" {% if not action_state.entrada %}disabled{% endif %}>
         Fichar entrada
       </button>
-      <button type="submit" name="action" value="descanso_inicio" {% if not action_state.descanso_inicio %}disabled{% endif %}>
+      <button class="btn-break-start" type="submit" name="action" value="descanso_inicio" {% if not action_state.descanso_inicio %}disabled{% endif %}>
         Iniciar descanso
       </button>
-      <button type="submit" name="action" value="descanso_fin" {% if not action_state.descanso_fin %}disabled{% endif %}>
+      <button class="btn-break-end" type="submit" name="action" value="descanso_fin" {% if not action_state.descanso_fin %}disabled{% endif %}>
         Fin descanso
       </button>
-      <button type="submit" name="action" value="salida" {% if not action_state.salida %}disabled{% endif %}>
+      <button class="btn-exit" type="submit" name="action" value="salida" {% if not action_state.salida %}disabled{% endif %}>
         Fichar salida
       </button>
     </div>
@@ -131,7 +131,7 @@
       <tr>
         <th>Día</th>
         <th>Entrada</th>
-        <th>Descanso</th>
+        <th>Descansos</th>
         <th>Salida</th>
         <th>Notas</th>
       </tr>
@@ -142,8 +142,14 @@
         <td>{{ entry.day }}</td>
         <td>{{ entry.check_in or '-' }}</td>
         <td>
-          {% if entry.break_start %}
-          {{ entry.break_start }} - {{ entry.break_end or 'pendiente' }}
+          {% if entry.break_periods %}
+          <ul class="pill-list">
+            {% for period in entry.break_periods %}
+            <li><span class="tag ghost">{{ period[0].strftime('%H:%M') }} - {{ period[1].strftime('%H:%M') }}</span></li>
+            {% endfor %}
+          </ul>
+          {% elif entry.ongoing_break_start %}
+          <span class="tag ghost">{{ entry.ongoing_break_start.strftime('%H:%M') }} - en curso</span>
           {% else %}
           -
           {% endif %}

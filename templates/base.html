@@ -22,6 +22,11 @@
         --blue-500: #3a7bff;
         --blue-600: #2c5bd8;
         --blue-900: #0f2453;
+        --green-500: #22c55e;
+        --green-600: #16a34a;
+        --amber-500: #f59e0b;
+        --amber-600: #d97706;
+        --slate-100: #e2e8f0;
         --slate-700: #1e293b;
       }
       * {
@@ -359,6 +364,56 @@
       .quick-actions button {
         border-radius: 999px;
         text-transform: none;
+      }
+      .quick-actions .btn-entry {
+        background: linear-gradient(120deg, var(--blue-600), var(--blue-500));
+      }
+      .quick-actions .btn-break-start {
+        background: linear-gradient(120deg, var(--green-600), var(--green-500));
+      }
+      .quick-actions .btn-break-end {
+        background: linear-gradient(120deg, var(--amber-600), var(--amber-500));
+      }
+      .quick-actions .btn-exit {
+        background: linear-gradient(120deg, #0f172a, #1f2937);
+      }
+      .pill-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+      .accordion {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .accordion summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        cursor: pointer;
+      }
+      .accordion-item {
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 1rem;
+        padding: 0.75rem 1rem;
+        background: white;
+        box-shadow: 0 10px 30px rgba(15, 36, 83, 0.05);
+      }
+      .accordion-item[open] {
+        border-color: var(--blue-100);
+        box-shadow: 0 16px 40px rgba(58, 123, 255, 0.08);
+      }
+      .accordion summary::-webkit-details-marker {
+        display: none;
+      }
+      .accordion-body {
+        margin-top: 0.5rem;
       }
       .action-hint {
         margin-top: 0.4rem;

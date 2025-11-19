@@ -30,42 +30,42 @@
   <h2>Solicitudes de acceso por correo</h2>
   <p class="page-subtitle">Aprueba o deniega el ingreso a la plataforma</p>
   {% if access_requests %}
-  <table>
-    <thead>
-      <tr>
-        <th>Correo</th>
-        <th>Colaborador</th>
-        <th>Estado</th>
-        <th>Creado</th>
-        <th>Última revisión</th>
-        <th>Acción</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for req in access_requests %}
-      <tr>
-        <td>{{ req.email }}</td>
-        <td>{{ req.collaborator_name }} ({{ req.collaborator_id }})</td>
-        <td><span class="tag">{{ req.status.value }}</span></td>
-        <td>{{ req.created_at.strftime('%d/%m %H:%M') }}</td>
-        <td>{{ req.updated_at.strftime('%d/%m %H:%M') if req.updated_at else '—' }}</td>
-        <td>
-          {% if req.status == AccessStatus.PENDING %}
-          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" style="display:flex; gap:0.5rem;">
+  <div class="accordion">
+    {% for req in access_requests %}
+    <details class="accordion-item" {% if loop.first %}open{% endif %}>
+      <summary>
+        <div>
+          <strong>{{ req.email }}</strong>
+          <p class="page-subtitle">{{ req.collaborator_name }} ({{ req.collaborator_id }})</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="tag">{{ req.status.value }}</span>
+          <span class="tag ghost">{{ req.desired_role.value }}</span>
+        </div>
+      </summary>
+      <div class="accordion-body">
+        <p class="page-subtitle" style="margin-bottom:0.5rem;">Creado {{ req.created_at.strftime('%d/%m %H:%M') }} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') if req.updated_at else '—' }}</p>
+        <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items:flex-end;">
+          <label>
+            Puesto
+            <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Ej. Productor(a)" />
+          </label>
+          <label>
+            Rol en la app
+            <select name="role">
+              <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+              <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+            </select>
+          </label>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
             <button type="submit" name="action" value="approve">Aprobar</button>
             <button type="submit" name="action" value="deny" class="ghost-link" style="color:#b91c1c;">Denegar</button>
-          </form>
-          {% else %}
-          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" style="display:flex; gap:0.5rem;">
-            <button type="submit" name="action" value="approve">Reactivar</button>
-            <button type="submit" name="action" value="deny" class="ghost-link" style="color:#b91c1c;">Bloquear</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </div>
+        </form>
+      </div>
+    </details>
+    {% endfor %}
+  </div>
   {% else %}
   <p style="color:#475569;">No hay solicitudes de acceso registradas.</p>
   {% endif %}

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from app_kimce.admin import AdminPortal
-from app_kimce.models import Collaborator, RequestType
+from app_kimce.models import Collaborator, RequestType, Role
 from app_kimce.portal import CollaboratorPortal, FlowError
 
 app = Flask(__name__)
@@ -34,6 +34,8 @@ class AccessRequest:
     collaborator_id: str
     collaborator_name: str
     created_at: datetime
+    position: Optional[str] = None
+    desired_role: Role = Role.COLLABORATOR
     status: AccessStatus = AccessStatus.PENDING
     reviewer: Optional[str] = None
     updated_at: Optional[datetime] = None
@@ -53,8 +55,22 @@ def _bootstrap_collaborators() -> List[Collaborator]:
     """Genera colaboradores demo para la interfaz."""
 
     return [
-        Collaborator("COL-001", "Ana Pérez", timedelta(hours=8), "ana@kimce.studio"),
-        Collaborator("COL-002", "Luis Gómez", timedelta(hours=6, minutes=30), "luis@kimce.studio"),
+        Collaborator(
+            "COL-001",
+            "Ana Pérez",
+            timedelta(hours=8),
+            "ana@kimce.studio",
+            position="Directora Creativa",
+            role=Role.ADMIN,
+        ),
+        Collaborator(
+            "COL-002",
+            "Luis Gómez",
+            timedelta(hours=6, minutes=30),
+            "luis@kimce.studio",
+            position="Diseñador Senior",
+            role=Role.COLLABORATOR,
+        ),
     ]
 
 
@@ -74,6 +90,8 @@ for index, collaborator in enumerate(collaborators):
         email=collaborator.email.lower(),
         collaborator_id=collaborator.collaborator_id,
         collaborator_name=collaborator.full_name,
+        position=collaborator.position,
+        desired_role=collaborator.role,
         created_at=datetime.now(),
         status=status,
         reviewer=reviewer,
@@ -150,6 +168,8 @@ def login():  # type: ignore[override]
                 email=email,
                 collaborator_id=collaborator.collaborator_id,
                 collaborator_name=collaborator.full_name,
+                position=collaborator.position,
+                desired_role=collaborator.role,
                 created_at=datetime.now(),
             )
             access_requests[email] = access_request
@@ -273,6 +293,7 @@ def admin_view() -> str:
             access_requests.values(), key=lambda req: req.created_at, reverse=True
         ),
         AccessStatus=AccessStatus,
+        Role=Role,
     )
 
 
@@ -321,6 +342,14 @@ def admin_access_decision(email: str):  # type: ignore[override]
         return redirect(url_for("admin_view"))
     action = request.form.get("action")
     reviewer = "Admin Demo"
+    position = request.form.get("position") or None
+    role_value = request.form.get("role") or Role.COLLABORATOR.value
+    collaborator = collaborators_by_email.get(email.lower())
+    if collaborator:
+        collaborator.position = position or collaborator.position
+        collaborator.role = Role(role_value)
+    access_request.position = position or access_request.position
+    access_request.desired_role = Role(role_value)
     if action == "approve":
         access_request.approve(reviewer)
         flash("Acceso aprobado", "success")

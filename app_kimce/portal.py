@@ -37,22 +37,25 @@ class CollaboratorPortal:
 
     def mark_break_start(self, ts: datetime, note: str | None = None) -> TimeEntry:
         entry = self._get_entry(ts.date())
-        if not entry.check_in or entry.break_start:
-            raise FlowError("No se puede iniciar descanso sin entrada o si ya fue registrado")
+        if not entry.check_in:
+            raise FlowError("No se puede iniciar descanso sin entrada")
+        if entry.ongoing_break_start:
+            raise FlowError("Ya hay un descanso en curso")
         if entry.check_out:
             raise FlowError("La jornada ya fue cerrada para este día")
-        entry.break_start = ts
+        entry.ongoing_break_start = ts
         if note:
             entry.add_note(note)
         return entry
 
     def mark_break_end(self, ts: datetime, note: str | None = None) -> TimeEntry:
         entry = self._get_entry(ts.date())
-        if not entry.break_start or entry.break_end:
+        if not entry.ongoing_break_start:
             raise FlowError("No se puede finalizar descanso sin inicio previo")
         if entry.check_out:
             raise FlowError("La jornada ya fue cerrada para este día")
-        entry.break_end = ts
+        entry.break_periods.append((entry.ongoing_break_start, ts))
+        entry.ongoing_break_start = None
         if note:
             entry.add_note(note)
         return entry
@@ -63,6 +66,8 @@ class CollaboratorPortal:
             raise FlowError("No se puede registrar salida sin entrada")
         if entry.check_out:
             raise FlowError("La salida ya fue registrada")
+        if entry.ongoing_break_start:
+            raise FlowError("Cierra primero el descanso en curso")
         entry.check_out = ts
         if note:
             entry.add_note(note)
@@ -83,7 +88,7 @@ class CollaboratorPortal:
     def week_summary(self, week_start: date) -> Dict[str, float]:
         week_end = week_start + timedelta(days=6)
         worked = self.collaborator.history.worked_hours_between(week_start, week_end)
-        expected = self.collaborator.expected_hours_between(week_start, week_end)
+        expected = self._expected_hours_adjusted(week_start, week_end)
         difference = worked - expected
         summary = {
             "horas_trabajadas": worked.total_seconds() / 3600,
@@ -93,6 +98,27 @@ class CollaboratorPortal:
             "horas_a_favor": max(0.0, difference.total_seconds() / 3600),
         }
         return summary
+
+    def _expected_hours_adjusted(self, start: date, end: date) -> timedelta:
+        """Resta de la expectativa los días aprobados como ausencia."""
+
+        expected = self.collaborator.expected_hours_between(start, end)
+        absence_types = {RequestType.VACATION, RequestType.COMP_DAY, RequestType.PERMIT}
+        absence_days: set[date] = set()
+        for request in self.collaborator.history.requests:
+            if request.status != RequestStatus.APPROVED or request.request_type not in absence_types:
+                continue
+            payload_start = datetime.fromisoformat(request.payload.get("inicio")) if request.payload.get("inicio") else None
+            payload_end = datetime.fromisoformat(request.payload.get("fin")) if request.payload.get("fin") else payload_start
+            if not payload_start or not payload_end:
+                continue
+            current = payload_start.date()
+            while current <= payload_end.date():
+                if start <= current <= end and current.weekday() < 5:
+                    absence_days.add(current)
+                current += timedelta(days=1)
+        deducted = self.collaborator.expected_daily_hours * len(absence_days)
+        return max(timedelta(0), expected - deducted)
 
     def request_history(self) -> List[Tuple[RequestType, RequestStatus, Dict[str, str]]]:
         return [
@@ -129,8 +155,8 @@ class CollaboratorPortal:
         locked = bool(entry.check_out)
         return {
             "entrada": entry.check_in is None,
-            "descanso_inicio": bool(entry.check_in and not entry.break_start and not entry.check_out),
-            "descanso_fin": bool(entry.break_start and not entry.break_end and not entry.check_out),
+            "descanso_inicio": bool(entry.check_in and not entry.ongoing_break_start and not entry.check_out),
+            "descanso_fin": bool(entry.ongoing_break_start and not entry.check_out),
             "salida": bool(entry.check_in and not entry.check_out),
             "bloqueado": locked,
         }

@@ -28,6 +28,11 @@ class RequestStatus(str, Enum):
     CORRECTION = "correccion"
 
 
+class Role(str, Enum):
+    COLLABORATOR = "colaborador"
+    ADMIN = "admin"
+
+
 class ActivityType(str, Enum):
     """Tipo de actividad especial registrada."""
 
@@ -45,8 +50,8 @@ class TimeEntry:
 
     day: date
     check_in: Optional[datetime] = None
-    break_start: Optional[datetime] = None
-    break_end: Optional[datetime] = None
+    break_periods: List[tuple[datetime, datetime]] = field(default_factory=list)
+    ongoing_break_start: Optional[datetime] = None
     check_out: Optional[datetime] = None
     notes: List[str] = field(default_factory=list)
 
@@ -60,8 +65,10 @@ class TimeEntry:
             return timedelta(0)
 
         total = self.check_out - self.check_in
-        if self.break_start and self.break_end:
-            total -= self.break_end - self.break_start
+        for start, end in self.break_periods:
+            total -= end - start
+        if self.ongoing_break_start:
+            total -= datetime.utcnow() - self.ongoing_break_start
         return total
 
 
@@ -153,6 +160,8 @@ class Collaborator:
     full_name: str
     expected_daily_hours: timedelta
     email: str
+    position: Optional[str] = None
+    role: Role = Role.COLLABORATOR
     history: CollaboratorHistory = field(init=False)
 
     def __post_init__(self) -> None:

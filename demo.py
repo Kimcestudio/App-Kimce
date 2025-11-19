@@ -9,13 +9,28 @@ from app_kimce import (
     Collaborator,
     CollaboratorPortal,
     RequestType,
+    Role,
 )
 
 
 def build_demo_state():
     collaborators = [
-        Collaborator("c1", "Ana López", timedelta(hours=8), "ana@example.com"),
-        Collaborator("c2", "Luis García", timedelta(hours=7.5), "luis@example.com"),
+        Collaborator(
+            "c1",
+            "Ana López",
+            timedelta(hours=8),
+            "ana@example.com",
+            position="Productora",
+            role=Role.COLLABORATOR,
+        ),
+        Collaborator(
+            "c2",
+            "Luis García",
+            timedelta(hours=7.5),
+            "luis@example.com",
+            position="Motion",
+            role=Role.COLLABORATOR,
+        ),
     ]
     portals = {c.collaborator_id: CollaboratorPortal(c) for c in collaborators}
 

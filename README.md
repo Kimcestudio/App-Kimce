@@ -70,7 +70,7 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 ### Gestión de accesos por correo
 - Cada colaborador inicia sesión con su email corporativo desde `/login`.
 - El primer ingreso crea una solicitud de acceso que queda “pendiente” hasta que el admin la apruebe.
-- El panel admin permite aprobar, denegar o volver a bloquear un correo con un clic.
+- El panel admin permite aprobar, denegar o volver a bloquear un correo con un clic, asignando además el puesto y el rol (admin o colaborador).
 - El historial muestra cuándo se creó la solicitud y la última revisión para auditoría.
 
 ### Gestión de horas del equipo
@@ -98,7 +98,8 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Cálculo inteligente de horas trabajadas, esperadas, extras y faltantes.
 - Conversión de horas extra a horas a favor según reglas definidas.
 - Bloqueo automático de marcaciones durante vacaciones y autoregistro de feriados.
-- Ajustes automáticos por descansos y validaciones para evitar flujos ilógicos.
+- Ajustes automáticos por descansos y validaciones para evitar flujos ilógicos (descansos múltiples por día, entrada/salida bloqueados tras cerrar la jornada).
+- Las vacaciones, permisos y días compensatorios aprobados descuentan las horas esperadas de la semana, evitando que cuenten como deuda.
 
 ## Experiencia de usuario
 
