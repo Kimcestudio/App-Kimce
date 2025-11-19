@@ -40,7 +40,11 @@
     </div>
     <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem;">
       <p style="margin:0; color:#475569; font-size:0.9rem;">Balance actualizado</p>
-      <a class="ghost-link" href="/colaborador/{{ item.collaborator.collaborator_id }}">Ir al portal →</a>
+      {% if active_collaborator and active_collaborator.collaborator_id == item.collaborator.collaborator_id %}
+      <a class="ghost-link" href="/colaborador/{{ item.collaborator.collaborator_id }}">Ir a mi portal →</a>
+      {% else %}
+      <a class="ghost-link" href="{{ url_for('login') }}?next={{ item.collaborator.collaborator_id }}">Iniciar sesión →</a>
+      {% endif %}
     </div>
   </article>
   {% endfor %}

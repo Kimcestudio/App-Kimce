@@ -168,6 +168,10 @@
         font-size: 0.85rem;
         padding: 0.35rem 1rem;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
       }
       .logout-button:hover,
@@ -435,21 +439,25 @@
         <span class="brand__subtitle">STUDIO</span>
       </div>
       <nav class="primary-nav">
-        <a href="/">Horarios</a>
-        <a href="/admin">Historial</a>
-        <a href="/admin#calendario">Calendario</a>
+        <a href="{{ url_for('home') }}">Horarios</a>
+        <a href="{{ url_for('admin_view') }}">Historial</a>
+        <a href="{{ url_for('admin_view') }}#calendario">Calendario</a>
       </nav>
       <div class="topbar-actions">
-        <a class="pill-button" href="/admin">Admin</a>
-        <a class="pill-button" href="/colaborador/COL-001">Mis semanas</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}">Admin</a>
+        {% if active_collaborator %}
+        <a class="pill-button" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}">Mi portal</a>
         <div class="user-meta">
           <div>
-            <small>Hola</small>
-            <strong>Kimce Studio</strong>
-            <a href="/admin#equipo">Alegría</a>
+            <small>Sesión activa</small>
+            <strong>{{ active_collaborator.full_name }}</strong>
+            <a href="mailto:{{ active_collaborator.email }}">{{ active_collaborator.email }}</a>
           </div>
-          <button class="logout-button" type="button">Cerrar sesión</button>
+          <a class="logout-button" href="{{ url_for('logout') }}">Cerrar sesión</a>
         </div>
+        {% else %}
+        <a class="pill-button" href="{{ url_for('login') }}">Iniciar sesión</a>
+        {% endif %}
       </div>
     </header>
     <main>

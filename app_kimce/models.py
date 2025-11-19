@@ -152,6 +152,7 @@ class Collaborator:
     collaborator_id: str
     full_name: str
     expected_daily_hours: timedelta
+    email: str
     history: CollaboratorHistory = field(init=False)
 
     def __post_init__(self) -> None:

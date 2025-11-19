@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import argparse
 import socket
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Dict, List
+from enum import Enum
+from typing import Dict, List, Optional
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from app_kimce.admin import AdminPortal
 from app_kimce.models import Collaborator, RequestType
@@ -16,12 +18,43 @@ app = Flask(__name__)
 app.secret_key = "kimce-demo-ui"
 
 
+class AccessStatus(str, Enum):
+    """Estados posibles para un acceso basado en correo."""
+
+    PENDING = "pendiente"
+    APPROVED = "aprobado"
+    DENIED = "denegado"
+
+
+@dataclass
+class AccessRequest:
+    """Solicitud de acceso registrada por correo."""
+
+    email: str
+    collaborator_id: str
+    collaborator_name: str
+    created_at: datetime
+    status: AccessStatus = AccessStatus.PENDING
+    reviewer: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+    def approve(self, reviewer: str) -> None:
+        self.status = AccessStatus.APPROVED
+        self.reviewer = reviewer
+        self.updated_at = datetime.now()
+
+    def deny(self, reviewer: str) -> None:
+        self.status = AccessStatus.DENIED
+        self.reviewer = reviewer
+        self.updated_at = datetime.now()
+
+
 def _bootstrap_collaborators() -> List[Collaborator]:
     """Genera colaboradores demo para la interfaz."""
 
     return [
-        Collaborator("COL-001", "Ana Pérez", timedelta(hours=8)),
-        Collaborator("COL-002", "Luis Gómez", timedelta(hours=6, minutes=30)),
+        Collaborator("COL-001", "Ana Pérez", timedelta(hours=8), "ana@kimce.studio"),
+        Collaborator("COL-002", "Luis Gómez", timedelta(hours=6, minutes=30), "luis@kimce.studio"),
     ]
 
 
@@ -29,12 +62,48 @@ collaborators = _bootstrap_collaborators()
 collaborator_portals: Dict[str, CollaboratorPortal] = {
     c.collaborator_id: CollaboratorPortal(c) for c in collaborators
 }
+collaborators_by_email: Dict[str, Collaborator] = {
+    c.email.lower(): c for c in collaborators
+}
+access_requests: Dict[str, AccessRequest] = {}
+for index, collaborator in enumerate(collaborators):
+    status = AccessStatus.APPROVED if index == 0 else AccessStatus.PENDING
+    reviewer = "Auto demo" if status == AccessStatus.APPROVED else None
+    updated_at = datetime.now() if status == AccessStatus.APPROVED else None
+    access_requests[collaborator.email.lower()] = AccessRequest(
+        email=collaborator.email.lower(),
+        collaborator_id=collaborator.collaborator_id,
+        collaborator_name=collaborator.full_name,
+        created_at=datetime.now(),
+        status=status,
+        reviewer=reviewer,
+        updated_at=updated_at,
+    )
 admin_portal = AdminPortal(collaborators)
 
 
 def _current_week_start() -> date:
     today = date.today()
     return today - timedelta(days=today.weekday())
+
+
+def _require_session(collaborator_id: str) -> bool:
+    """Valida que el colaborador en sesión sea el dueño del portal."""
+
+    logged_id = session.get("collaborator_id")
+    if logged_id != collaborator_id:
+        flash("Inicia sesión con tu correo corporativo para acceder a tu portal.", "error")
+        return False
+    return True
+
+
+@app.context_processor
+def inject_session_data():
+    collaborator = None
+    collaborator_id = session.get("collaborator_id")
+    if collaborator_id and collaborator_id in collaborator_portals:
+        collaborator = collaborator_portals[collaborator_id].collaborator
+    return {"active_collaborator": collaborator}
 
 
 @app.route("/")
@@ -59,8 +128,65 @@ def home() -> str:
     )
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():  # type: ignore[override]
+    next_id = request.values.get("next")
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        if not email:
+            flash("Ingresa tu correo corporativo", "error")
+            if next_id:
+                return redirect(url_for("login", next=next_id))
+            return redirect(url_for("login"))
+        collaborator = collaborators_by_email.get(email)
+        if not collaborator:
+            flash("No encontramos ese correo en el equipo.", "error")
+            if next_id:
+                return redirect(url_for("login", next=next_id))
+            return redirect(url_for("login"))
+        access_request = access_requests.get(email)
+        if not access_request:
+            access_request = AccessRequest(
+                email=email,
+                collaborator_id=collaborator.collaborator_id,
+                collaborator_name=collaborator.full_name,
+                created_at=datetime.now(),
+            )
+            access_requests[email] = access_request
+            flash("Tu solicitud de acceso fue enviada al panel admin.", "info")
+            if next_id:
+                return redirect(url_for("login", next=next_id))
+            return redirect(url_for("login"))
+        if access_request.status == AccessStatus.DENIED:
+            flash("Tu acceso fue denegado. Contacta a administración.", "error")
+            if next_id:
+                return redirect(url_for("login", next=next_id))
+            return redirect(url_for("login"))
+        if access_request.status == AccessStatus.PENDING:
+            flash("Tu acceso aún está pendiente de aprobación.", "info")
+            if next_id:
+                return redirect(url_for("login", next=next_id))
+            return redirect(url_for("login"))
+        session["collaborator_id"] = collaborator.collaborator_id
+        flash("Sesión iniciada", "success")
+        destination = collaborator.collaborator_id
+        if next_id and next_id == collaborator.collaborator_id:
+            destination = next_id
+        return redirect(url_for("collaborator_view", collaborator_id=destination))
+    return render_template("login.html", next_id=next_id)
+
+
+@app.get("/logout")
+def logout():  # type: ignore[override]
+    session.pop("collaborator_id", None)
+    flash("Sesión cerrada", "info")
+    return redirect(url_for("home"))
+
+
 @app.route("/colaborador/<collaborator_id>")
 def collaborator_view(collaborator_id: str) -> str:
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
     portal = collaborator_portals[collaborator_id]
     collaborator = portal.collaborator
     entries = sorted(collaborator.history.time_entries, key=lambda e: e.day, reverse=True)
@@ -81,6 +207,8 @@ def collaborator_view(collaborator_id: str) -> str:
 
 @app.post("/colaborador/<collaborator_id>/marcar")
 def collaborator_mark(collaborator_id: str):  # type: ignore[override]
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
     portal = collaborator_portals[collaborator_id]
     action = request.form.get("action")
     note = request.form.get("note") or None
@@ -105,6 +233,8 @@ def collaborator_mark(collaborator_id: str):  # type: ignore[override]
 
 @app.post("/colaborador/<collaborator_id>/solicitud")
 def collaborator_request(collaborator_id: str):  # type: ignore[override]
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
     portal = collaborator_portals[collaborator_id]
     request_type = RequestType(request.form["request_type"])
     payload: Dict[str, str] = {}
@@ -139,6 +269,10 @@ def admin_view() -> str:
         calendar=calendar,
         summary=admin_portal.hours_balance_summary(),
         holidays=admin_portal.list_holidays(),
+        access_requests=sorted(
+            access_requests.values(), key=lambda req: req.created_at, reverse=True
+        ),
+        AccessStatus=AccessStatus,
     )
 
 
@@ -176,6 +310,25 @@ def admin_create_holiday():  # type: ignore[override]
         compensable=compensable,
     )
     flash("Feriado agregado", "success")
+    return redirect(url_for("admin_view"))
+
+
+@app.post("/admin/accesos/<path:email>")
+def admin_access_decision(email: str):  # type: ignore[override]
+    access_request = access_requests.get(email.lower())
+    if not access_request:
+        flash("Solicitud de acceso no encontrada", "error")
+        return redirect(url_for("admin_view"))
+    action = request.form.get("action")
+    reviewer = "Admin Demo"
+    if action == "approve":
+        access_request.approve(reviewer)
+        flash("Acceso aprobado", "success")
+    elif action == "deny":
+        access_request.deny(reviewer)
+        flash("Acceso denegado", "info")
+    else:
+        flash("Acción inválida", "error")
     return redirect(url_for("admin_view"))
 
 

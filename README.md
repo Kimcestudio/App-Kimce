@@ -32,11 +32,10 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Validación automática para evitar doble registro o marcaciones incongruentes.
 - Posibilidad de añadir observaciones por cada evento.
 
-### MyWeekCard
-- Resumen semanal de horas trabajadas, esperadas y extras.
-- Visualización de horas faltantes (deuda) y horas a favor acumuladas.
+### Resumen semanal en la cabecera
+- Tarjetas siempre visibles con horas trabajadas, esperadas y extra.
 - Indicadores visuales verde/rojo según cumplimiento.
-- Selector de semana, mes o vista completa.
+- Balance acumulado de horas a favor y horas faltantes sin necesidad de navegar a otra vista.
 
 ### Solicitudes disponibles
 - Vacaciones con fechas específicas.
@@ -51,6 +50,11 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Estado de aprobaciones de horas y actividades.
 - Registro de vacaciones, días libres y uso de horas a favor.
 
+### Control de jornada
+- Los botones de entrada, descanso y salida se habilitan/deshabilitan según el flujo permitido.
+- Una vez que se registra la salida, la jornada queda bloqueada hasta el día siguiente.
+- Se muestran mensajes de ayuda cuando la jornada está cerrada para evitar errores.
+
 ## Portal Admin – Gestión completa
 
 ### Gestión de feriados y días especiales
@@ -62,6 +66,12 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Bandeja con solicitudes de vacaciones, permisos, horas extra, horas a favor y actividades especiales.
 - Opciones para aprobar, rechazar o pedir correcciones.
 - Al aprobar, los eventos se registran automáticamente en el calendario e historial del colaborador.
+
+### Gestión de accesos por correo
+- Cada colaborador inicia sesión con su email corporativo desde `/login`.
+- El primer ingreso crea una solicitud de acceso que queda “pendiente” hasta que el admin la apruebe.
+- El panel admin permite aprobar, denegar o volver a bloquear un correo con un clic.
+- El historial muestra cuándo se creó la solicitud y la última revisión para auditoría.
 
 ### Gestión de horas del equipo
 - Ajustes manuales para súper admins: sumar/restar horas a favor y corregir marcaciones.
@@ -123,7 +133,7 @@ El repositorio incluye una implementación Python ligera que modela todas las re
 ### Requisitos
 
 - Python 3.11+
-- Dependencias listadas en `requirements.txt` (actualmente solo Flask para la UI).
+- Dependencias listadas en `requirements.txt` (Flask para la UI y Gunicorn para despliegues productivos).
 
 Instala todo con:
 
@@ -169,3 +179,23 @@ python webapp.py --host 0.0.0.0 --port 8080
 ```
 
 La terminal mostrará la URL `http://0.0.0.0:8080` y, además, un enlace usando la IP real de tu máquina (por ejemplo `http://192.168.0.12:8080`). Comparte ese enlace dentro de tu red o reemplázalo por tu IP pública si necesitas acceso remoto (idealmente detrás de un túnel seguro como ngrok o Cloudflare Tunnel).
+
+##### Desplegarlo en internet (Render/Railway)
+
+Para que los colaboradores ingresen desde cualquier lugar, despliega `webapp.py` en un proveedor PaaS gratuito como Render o Railway:
+
+1. **Crea el servicio web** apuntando a este repositorio o a un fork privado.
+2. Define los comandos de build/start:
+
+   ```bash
+   # Build
+   pip install -r requirements.txt
+
+   # Start
+   gunicorn webapp:app --bind 0.0.0.0:$PORT --log-level info
+   ```
+
+3. Configura la variable `FLASK_SECRET_KEY` y, si lo deseas, `PORT`.
+4. Una vez desplegado, comparte la URL pública que entrega la plataforma (por ejemplo `https://kimce-demo.onrender.com`).
+
+Puedes replicar la misma receta en Fly.io, Dokku u otro servidor Linux siempre que expongas el puerto HTTP, apuntes un dominio y uses HTTPS (Cloudflare o Let’s Encrypt) para proteger las credenciales.
