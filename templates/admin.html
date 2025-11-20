@@ -119,75 +119,55 @@
   <p style="color:#475569;">No hay eventos registrados.</p>
   {% endif %}
 </section>
-<section class="card" id="accesos" style="margin-top:1.5rem;">
-  <div class="page-header" style="align-items:flex-start;">
+<section class="card access-card" id="accesos" style="margin-top:1.5rem;">
+  <div class="page-header access-header" style="align-items:flex-start;">
     <div>
       <p class="tag">Usuarios y roles</p>
       <h2>Solicitudes de acceso</h2>
-      <p class="page-subtitle">Los usuarios aparecen automáticamente al iniciar sesión con su correo corporativo.</p>
       <p class="page-subtitle">Aprueba, cambia rol (Admin/Colaborador), define puesto o bloquea el ingreso.</p>
+      <p class="page-subtitle">Los usuarios aparecen automáticamente al iniciar sesión con su correo corporativo.</p>
     </div>
-    <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end; width:100%; max-width:320px;">
-      <input type="search" placeholder="Buscar por nombre o correo" style="width:100%;" />
-      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
+    <div class="access-head-actions">
+      <input type="search" placeholder="Buscar por nombre o correo" />
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:flex-end; width:100%;">
         <span class="pill-count">{{ access_counts.total }} usuarios</span>
         <span class="pill-count pending">{{ access_counts.pending }} pendientes</span>
       </div>
     </div>
   </div>
   {% if access_requests %}
-  <div class="access-grid">
-    <table>
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Correo</th>
-          <th>Estado</th>
-          <th>Rol</th>
-          <th>Puesto</th>
-          <th style="text-align:right;">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for req in access_requests %}
-        <tr>
-          <td>
-            <div class="access-row__user">
-              <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
-              <div>
-                <strong>{{ req.collaborator_name }}</strong><br />
-                <span class="page-subtitle">{{ req.collaborator_id }}</span>
-              </div>
-            </div>
-          </td>
-          <td style="word-break:break-all;">{{ req.email }}</td>
-          <td>
-            {% set status_class = 'gray' %}
-            {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
-            <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
-          </td>
-          <td>{{ req.desired_role.value.title() }}</td>
-          <td>{{ req.position or '—' }}</td>
-          <td style="text-align:right;">
-            <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" style="display:flex; flex-direction:column; gap:0.35rem; align-items:flex-end;">
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:0.4rem; width:100%;">
-                <select name="role">
-                  <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
-                  <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
-                </select>
-                <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
-              </div>
-              <div style="display:flex; gap:0.4rem; justify-content:flex-end; flex-wrap:wrap; width:100%;">
-                <button type="submit" name="action" value="approve">Aprobar</button>
-                <button type="submit" name="action" value="deny" class="button-secondary" style="color:#b91c1c; border-color: rgba(185,28,28,0.3);">Denegar</button>
-              </div>
-              <p class="page-subtitle" style="margin:0.35rem 0 0;">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="access-list">
+    {% for req in access_requests %}
+    <article class="access-item">
+      <div class="access-user">
+        <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+        <div>
+          <div class="access-name">{{ req.collaborator_name }}</div>
+          <div class="access-sub">
+            <span>{{ req.email }}</span>
+            <span>• {{ req.collaborator_id }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="access-status">
+        {% set status_class = 'gray' %}
+        {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
+        <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
+        <p class="micro-copy">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
+      </div>
+      <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="access-actions">
+        <select name="role">
+          <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+          <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+        </select>
+        <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
+        <div class="access-buttons">
+          <button type="submit" name="action" value="approve">Aprobar</button>
+          <button type="submit" name="action" value="deny" class="button-ghost">Denegar</button>
+        </div>
+      </form>
+    </article>
+    {% endfor %}
   </div>
   {% else %}
   <p style="color:#475569;">No hay solicitudes de acceso registradas.</p>
