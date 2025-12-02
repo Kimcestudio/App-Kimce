@@ -655,28 +655,23 @@
         align-items: flex-start;
       }
       .access-actions {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 0.6rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.45rem;
         align-items: center;
-        justify-content: flex-end;
       }
       .access-actions input,
       .access-actions select {
         padding: 0.55rem 0.65rem;
         border-radius: 0.7rem;
         font-size: 0.9rem;
-        flex: 1 1 150px;
-        max-width: 190px;
       }
       .access-buttons {
         display: flex;
         gap: 0.4rem;
         justify-content: flex-end;
         flex-wrap: wrap;
-      }
-      .access-buttons button {
-        min-width: 105px;
+        grid-column: 1 / -1;
       }
       .button-ghost {
         background: transparent;
@@ -694,8 +689,7 @@
           align-items: flex-start;
         }
         .access-actions {
-          flex-wrap: wrap;
-          justify-content: flex-start;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         }
       }
       @media (max-width: 640px) {
