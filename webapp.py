@@ -153,16 +153,35 @@ def home() -> str:
             {
                 "collaborator": portal.collaborator,
                 "summary": portal.week_summary(week_start),
+                "balance": portal.balance_overview(),
                 "indicator": portal.weekly_indicator(week_start),
             }
         )
     admin_summary = admin_portal.hours_balance_summary()
+    summary_totals = {"horas_trabajadas": 0.0, "horas_esperadas": 0.0, "horas_extra": 0.0}
+    for card in collaborator_cards:
+        summary_totals["horas_trabajadas"] += card["summary"].get("horas_trabajadas", 0.0)
+        summary_totals["horas_esperadas"] += card["summary"].get("horas_esperadas", 0.0)
+        summary_totals["horas_extra"] += card["summary"].get("horas_extra", 0.0)
+    admin_summary.update(summary_totals)
     holidays = admin_portal.list_holidays()
+    today = date.today()
+    calendar = admin_portal.build_calendar(today.month, today.year)
+    access_list = list(access_requests.values())
+    access_counts = {
+        "total": len(access_list),
+        "pending": len([a for a in access_list if a.status == AccessStatus.PENDING]),
+    }
     return render_template(
         "home.html",
         collaborator_cards=collaborator_cards,
         admin_summary=admin_summary,
         holidays=holidays,
+        calendar=calendar,
+        access_requests=access_list,
+        access_counts=access_counts,
+        Role=Role,
+        AccessStatus=AccessStatus,
     )
 
 
