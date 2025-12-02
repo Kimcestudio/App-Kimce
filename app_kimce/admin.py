@@ -108,6 +108,23 @@ class AdminPortal:
         collaborator = self.collaborators[collaborator_id]
         collaborator.history.add_entry(entry)
 
+    def assign_vacation(self, collaborator_id: str, start: datetime, end: datetime, reviewer: str) -> Request:
+        """Permite al admin registrar vacaciones aprobadas sin esperar solicitud."""
+
+        payload = {"inicio": start.isoformat(), "fin": end.isoformat()}
+        request = Request(
+            collaborator_id=collaborator_id,
+            request_type=RequestType.VACATION,
+            created_at=datetime.utcnow(),
+            payload=payload,
+            status=RequestStatus.APPROVED,
+            reviewer=reviewer,
+        )
+        collaborator = self.collaborators[collaborator_id]
+        collaborator.history.add_request(request)
+        self._post_approval_effect(request)
+        return request
+
     # --- Calendario ------------------------------------------------------
     def build_calendar(self, month: int, year: int) -> List[CalendarEvent]:
         events = [event for event in self.calendar_events if event.start.month == month and event.start.year == year]

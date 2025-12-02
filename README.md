@@ -50,6 +50,11 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Estado de aprobaciones de horas y actividades.
 - Registro de vacaciones, días libres y uso de horas a favor.
 
+### Mi perfil
+- Vista dedicada con tus datos de contacto, rol y puesto.
+- Panel compacto de próximos eventos aprobados (vacaciones, permisos, compensatorios).
+- Historial aprobado siempre visible sin salir del portal.
+
 ### Control de jornada
 - Los botones de entrada, descanso y salida se habilitan/deshabilitan según el flujo permitido.
 - Una vez que se registra la salida, la jornada queda bloqueada hasta el día siguiente.
@@ -76,6 +81,7 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 ### Gestión de horas del equipo
 - Ajustes manuales para súper admins: sumar/restar horas a favor y corregir marcaciones.
 - Registro de días libres compensatorios y rectificación de entradas/salidas erróneas.
+- Asignación directa de vacaciones aprobadas desde el panel, sin esperar solicitud.
 
 ### Calendario general
 - Calendario consolidado con entradas/salidas, vacaciones, feriados y actividades especiales.

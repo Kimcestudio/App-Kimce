@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from app_kimce.admin import AdminPortal
-from app_kimce.models import Collaborator, RequestType, Role
+from app_kimce.models import Collaborator, RequestStatus, RequestType, Role
 from app_kimce.portal import CollaboratorPortal, FlowError
 
 app = Flask(__name__)
@@ -247,6 +247,34 @@ def collaborator_view(collaborator_id: str) -> str:
     )
 
 
+@app.route("/perfil/<collaborator_id>")
+def collaborator_profile(collaborator_id: str) -> str:
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
+    portal = collaborator_portals[collaborator_id]
+    collaborator = portal.collaborator
+    week_start = _current_week_start()
+    approved = [
+        req
+        for req in collaborator.history.requests
+        if req.status == RequestStatus.APPROVED
+    ]
+    upcoming = [
+        req
+        for req in approved
+        if req.payload.get("inicio") and datetime.fromisoformat(req.payload.get("inicio")).date() >= date.today()
+    ]
+    return render_template(
+        "profile.html",
+        collaborator=collaborator,
+        summary=portal.week_summary(week_start),
+        balance=portal.balance_overview(),
+        approved_requests=approved,
+        upcoming_requests=sorted(upcoming, key=lambda r: r.payload.get("inicio")),
+        RequestType=RequestType,
+    )
+
+
 @app.post("/colaborador/<collaborator_id>/marcar")
 def collaborator_mark(collaborator_id: str):  # type: ignore[override]
     if not _require_session(collaborator_id):
@@ -319,6 +347,7 @@ def admin_view() -> str:
         },
         AccessStatus=AccessStatus,
         Role=Role,
+        collaborators=list(collaborator_portals.values()),
     )
 
 
@@ -356,6 +385,25 @@ def admin_create_holiday():  # type: ignore[override]
         compensable=compensable,
     )
     flash("Feriado agregado", "success")
+    return redirect(url_for("admin_view"))
+
+
+@app.post("/admin/vacaciones")
+def admin_assign_vacation():  # type: ignore[override]
+    collaborator_id = request.form.get("collaborator_id")
+    start = request.form.get("start")
+    end = request.form.get("end") or start
+    if not collaborator_id or not start:
+        flash("Selecciona colaborador y fecha de inicio", "error")
+        return redirect(url_for("admin_view"))
+    try:
+        start_dt = datetime.fromisoformat(f"{start}T09:00:00")
+        end_dt = datetime.fromisoformat(f"{end}T18:00:00")
+    except ValueError:
+        flash("Formato de fecha inválido", "error")
+        return redirect(url_for("admin_view"))
+    admin_portal.assign_vacation(collaborator_id, start_dt, end_dt, "Admin Demo")
+    flash("Vacaciones registradas", "success")
     return redirect(url_for("admin_view"))
 
 

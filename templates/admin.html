@@ -58,6 +58,27 @@
     </form>
   </section>
   <section class="card">
+    <h2>Asignar vacaciones</h2>
+    <p class="page-subtitle">Crea un bloque aprobado sin esperar solicitud del colaborador.</p>
+    <form method="post" action="{{ url_for('admin_assign_vacation') }}" class="stacked-list">
+      <label>Colaborador
+        <select name="collaborator_id" required>
+          <option value="">Selecciona</option>
+          {% for portal in collaborators %}
+          <option value="{{ portal.collaborator.collaborator_id }}">{{ portal.collaborator.full_name }} ({{ portal.collaborator.collaborator_id }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+        <label>Inicio<input type="date" name="start" required /></label>
+        <label>Fin<input type="date" name="end" /></label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+        <button type="submit">Asignar vacaciones</button>
+      </div>
+    </form>
+  </section>
+  <section class="card">
     <h2>Solicitudes pendientes</h2>
     {% if requests %}
     <div class="stacked-list">
