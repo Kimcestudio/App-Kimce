@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-shell">
+  <aside class="side-rail">
+    <button class="rail-button active" aria-label="Panel"><span>🏠</span></button>
+    <button class="rail-button" aria-label="Calendario" onclick="location.href='{{ url_for('admin_view') }}#calendario'">📅</button>
+    <button class="rail-button" aria-label="Solicitudes" onclick="location.href='{{ url_for('admin_view') }}#accesos'">🧾</button>
+    <button class="rail-button" aria-label="Equipo" onclick="location.href='{{ url_for('admin_view') }}'">👥</button>
+  </aside>
+  <div class="dashboard-main">
+    <section class="hero">
+      <p class="tag">Dashboard</p>
+      <h1>Actividad del estudio</h1>
+      <p>
+        Vista inspirada en tu referencia: tarjetas flotantes, métricas rápidas y accesos directos a calendario,
+        solicitudes y roles, manteniendo la paleta azul.
+      </p>
+      <div class="stat-grid" style="margin-top:1rem;">
+        <div class="stat-card">
+          <p class="stat-label">Horas trabajadas semana</p>
+          <p class="stat-value">{{ admin_summary.horas_trabajadas|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Horas esperadas</p>
+          <p class="stat-value">{{ admin_summary.horas_esperadas|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">A favor del equipo</p>
+          <p class="stat-value">{{ admin_summary.horas_a_favor|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Deuda del equipo</p>
+          <p class="stat-value">{{ admin_summary.horas_deuda|hhmm }}</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="widget-grid">
+      <article class="widget">
+        <div class="pill-header">
+          <div>
+            <p class="tag">Overview</p>
+            <h3>Pulso semanal</h3>
+            <p class="quiet-label">Promedio semanal por colaborador</p>
+          </div>
+          <strong>{{ collaborator_cards|length }} activos</strong>
+        </div>
+        <div class="mini-chart" aria-hidden="true"></div>
+        <div class="stat-grid" style="margin-top:0.8rem;">
+          <div class="stat-card">
+            <p class="stat-label">Horas extra</p>
+            <p class="stat-value">{{ admin_summary.horas_extra|hhmm }}</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-label">Eventos de calendario</p>
+            <p class="stat-value">{{ holidays|length + calendar|length }}</p>
+          </div>
+        </div>
+      </article>
+      <article class="widget">
+        <p class="tag">Equipo</p>
+        <h3>Colaboradores conectados</h3>
+        <p class="quiet-label">Indicadores semanales en tiempo real</p>
+        <div class="stacked-list" style="margin-top:0.9rem;">
+          {% for item in collaborator_cards %}
+          <div class="list-row" style="grid-template-columns: 1fr auto; padding:0.6rem 0.75rem;">
+            <div class="list-row__main">
+              <div>
+                <p class="tag" style="margin:0;">{{ item.collaborator.collaborator_id }}</p>
+                <h3 style="margin:0.25rem 0 0; font-size:1rem;">{{ item.collaborator.full_name }}</h3>
+                <p class="quiet-label">Saldo {{ item.balance.horas_a_favor|hhmm }} a favor</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+              <span class="indicator-pill {{ item.indicator }}">{{ item.indicator }}</span>
+              {% if active_collaborator and active_collaborator.collaborator_id == item.collaborator.collaborator_id %}
+              <a class="ghost-link" href="/colaborador/{{ item.collaborator.collaborator_id }}">Portal →</a>
+              {% else %}
+              <a class="ghost-link" href="{{ url_for('login') }}?next={{ item.collaborator.collaborator_id }}">Ingresar →</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="widget">
+        <p class="tag">Calendario</p>
+        <h3>Feriados y eventos</h3>
+        <p class="quiet-label">Listado rápido del mes</p>
+        {% if holidays or calendar %}
+        <ul style="list-style:none; padding:0; margin-top:0.9rem; display:flex; flex-direction:column; gap:0.35rem;">
+          {% for holiday in holidays %}
+          <li class="chip-row" style="background:var(--blue-50); border:1px solid rgba(63,122,255,0.15);">{{ holiday.day }} · {{ holiday.name }}</li>
+          {% endfor %}
+          {% for event in calendar %}
+          <li class="chip-row">{{ event.start }} → {{ event.end }} · {{ event.title }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="quiet-label" style="margin-top:0.9rem;">No hay eventos registrados.</p>
+        {% endif %}
+      </article>
+    </div>
+
+    <section class="card" style="margin-top:0.5rem;">
+      <div class="pill-header">
+        <div>
+          <p class="tag">Accesos y roles</p>
+          <h2 style="margin:0;">Solicitudes de acceso</h2>
+          <p class="page-subtitle">Colocadas al final del panel, con la distribución limpia solicitada.</p>
+        </div>
+        <div style="display:flex; gap:0.4rem;">
+          <span class="pill-count">{{ access_counts.total }} usuarios</span>
+          <span class="pill-count pending">{{ access_counts.pending }} pendientes</span>
+        </div>
+      </div>
+      {% if access_requests %}
+      <div class="stacked-list">
+        {% for req in access_requests %}
+        <article class="access-item">
+          <div class="access-user">
+            <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+            <div>
+              <div class="access-name">{{ req.collaborator_name }}</div>
+              <div class="access-sub">
+                <span>{{ req.email }}</span>
+                <span>• {{ req.collaborator_id }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="access-status">
+            {% set status_class = 'gray' %}
+            {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
+            <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
+            <p class="micro-copy">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
+          </div>
+          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="access-actions">
+            <select name="role">
+              <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+              <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+            </select>
+            <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
+            <div class="access-buttons">
+              <button type="submit" name="action" value="approve">Aprobar</button>
+              <button type="submit" name="action" value="deny" class="button-ghost">Denegar</button>
+            </div>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:#475569;">No hay solicitudes de acceso registradas.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
