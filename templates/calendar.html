@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="grid two" style="align-items: start; gap: 1rem;">
+  <div class="card glass" style="grid-column: span 2; display:flex; justify-content: space-between; align-items: center;">
+    <div>
+      <p class="quiet-label">Calendario | {{ collaborator.full_name }}</p>
+      <h3 style="margin:0;">{{ month }}/{{ year }}</h3>
+      <p class="muted">Consulta tus jornadas, feriados, vacaciones y actividades extra con estilo Google Calendar.</p>
+    </div>
+    <div class="chip-row">
+      <a class="pill-button ghost" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=prev_month, year=prev_year) }}">◀ Mes anterior</a>
+      <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=next_month, year=next_year) }}">Mes siguiente ▶</a>
+      <a class="pill-button ghost" href="{{ url_for('collaborator_view', collaborator_id=collaborator.collaborator_id) }}">Volver al portal</a>
+    </div>
+  </div>
+  <div class="card" style="grid-column: span 2;">
+    <div class="calendar-grid">
+      {% for day_card in day_cards %}
+      <div class="calendar-cell">
+        <div class="cell-top">
+          <div class="date-dot">{{ day_card.day.day }}</div>
+          <div class="cell-hours">Trab: {{ day_card.worked|hhmm }} / Exp: {{ day_card.expected|hhmm }}</div>
+        </div>
+        <div class="event-stack">
+          {% for event in day_card.events %}
+          <div class="event-pill">
+            <span class="event-time">{{ event.start.strftime('%H:%M') }} - {{ event.end.strftime('%H:%M') }}</span>
+            <strong>{{ event.title }}</strong>
+            {% if event.metadata and event.metadata.get('tipo') %}<small>{{ event.metadata.get('tipo') }}</small>{% endif %}
+          </div>
+          {% endfor %}
+          {% if not day_card.events %}
+          <div class="event-pill muted">Sin eventos</div>
+          {% endif %}
+        </div>
+        <form class="inline-form" method="post" action="{{ url_for('collaborator_calendar_event', collaborator_id=collaborator.collaborator_id) }}">
+          <input type="hidden" name="day" value="{{ day_card.day.isoformat() }}" />
+          <input type="hidden" name="month" value="{{ month }}" />
+          <input type="hidden" name="year" value="{{ year }}" />
+          <div class="mini-form">
+            <select name="kind">
+              <option value="actividad">Actividad</option>
+              <option value="extra">Horas extra</option>
+            </select>
+            <input name="title" type="text" placeholder="Título" />
+            <input name="start_time" type="time" value="09:00" />
+            <input name="end_time" type="time" value="10:00" />
+            <button type="submit" class="pill-button">Agregar</button>
+          </div>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h4>Notificaciones</h4>
+    <ul class="clean-list">
+      {% for note in notifications %}
+      <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+      {% else %}
+      <li class="muted">Sin avisos por ahora.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Horario asignado</h4>
+    <p class="muted">Lunes-Viernes: 08:00 · Sábado: 04:00</p>
+    <p>Modalidad: {{ collaborator.modality.value.replace('_', ' ') }} · Rol: {{ collaborator.role.value }}</p>
+  </div>
+</section>
+{% endblock content %}
