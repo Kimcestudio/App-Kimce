@@ -17,6 +17,7 @@ from app_kimce.models import (
     Document,
     Evaluation,
     KPIRecord,
+    Notification,
     NotificationCategory,
     RequestStatus,
     RequestType,
@@ -201,7 +202,10 @@ def inject_session_data():
     collaborator_id = session.get("collaborator_id")
     if collaborator_id and collaborator_id in collaborator_portals:
         collaborator = collaborator_portals[collaborator_id].collaborator
-    return {"active_collaborator": collaborator}
+    notifications: List[Notification] = []
+    if collaborator:
+        notifications = admin_portal.list_notifications(collaborator.collaborator_id)
+    return {"active_collaborator": collaborator, "notification_feed": notifications}
 
 
 @app.template_filter("hhmm")
@@ -427,7 +431,7 @@ def collaborator_calendar(collaborator_id: str) -> str:
     year = int(request.args.get("year", today.year))
     events = admin_portal.calendar_for_collaborator(collaborator_id, month, year)
     days_in_month = pycal.monthrange(year, month)[1]
-    day_cards = []
+    day_cards = {}
     for day in range(1, days_in_month + 1):
         current = date(year, month, day)
         entry = next((e for e in collaborator.history.time_entries if e.day == current), None)
@@ -438,14 +442,13 @@ def collaborator_calendar(collaborator_id: str) -> str:
             for ev in events
             if ev.start.date() <= current <= ev.end.date()
         ]
-        day_cards.append(
-            {
-                "day": current,
-                "worked": worked,
-                "expected": expected,
-                "events": day_events,
-            }
-        )
+        day_cards[current] = {
+            "day": current,
+            "worked": worked,
+            "expected": expected,
+            "events": day_events,
+        }
+    month_matrix = pycal.Calendar(firstweekday=0).monthdatescalendar(year, month)
     prev_month = month - 1 or 12
     prev_year = year - 1 if month == 1 else year
     next_month = month + 1 if month < 12 else 1
@@ -453,6 +456,7 @@ def collaborator_calendar(collaborator_id: str) -> str:
     return render_template(
         "calendar.html",
         collaborator=collaborator,
+        month_matrix=month_matrix,
         day_cards=day_cards,
         month=month,
         year=year,
@@ -460,6 +464,9 @@ def collaborator_calendar(collaborator_id: str) -> str:
         prev_year=prev_year,
         next_month=next_month,
         next_year=next_year,
+        month_name=pycal.month_name[month],
+        collaborators=list(collaborator_portals.values()),
+        date=date,
         notifications=admin_portal.list_notifications(collaborator_id),
     )
 

@@ -273,6 +273,56 @@
         color: white;
         border-color: #b91c1c;
       }
+      .notif-center {
+        position: relative;
+      }
+      .notif-center summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .notif-center[open] summary::marker,
+      .notif-center summary::-webkit-details-marker {
+        display: none;
+      }
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--stroke);
+        background: linear-gradient(145deg, #ffffff, #eef3ff);
+        box-shadow: var(--shadow-soft);
+      }
+      .badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: var(--red-500);
+        color: white;
+        border-radius: 999px;
+        padding: 0.15rem 0.45rem;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .notif-panel {
+        position: absolute;
+        right: 0;
+        margin-top: 0.6rem;
+        width: 320px;
+        background: var(--panel);
+        border-radius: 16px;
+        border: 1px solid var(--stroke);
+        box-shadow: 0 18px 48px rgba(12, 31, 54, 0.18);
+        padding: 1rem;
+        z-index: 20;
+      }
+      .notif-header {
+        margin-bottom: 0.75rem;
+      }
+      .notify-title {
+        font-weight: 700;
+      }
       main {
         padding: 2.2rem clamp(1rem, 4vw, 3.5rem);
         max-width: 1280px;
@@ -1034,6 +1084,132 @@
         color: var(--muted);
         font-size: 0.85rem;
       }
+      /* Calendar & dashboard refresh */
+      .calendar-shell {
+        display: grid;
+        grid-template-columns: 1.35fr 0.65fr;
+        gap: 1rem;
+      }
+      .calendar-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .calendar-hero h1 {
+        margin: 0;
+      }
+      .calendar-board {
+        background: var(--panel);
+        border-radius: var(--radius-card);
+        padding: 1rem;
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow-soft);
+      }
+      .month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.35rem;
+      }
+      .weekday-label {
+        text-align: center;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 12px;
+        margin-bottom: 0.3rem;
+      }
+      .month-cell {
+        background: linear-gradient(160deg, #ffffff, #f1f4ff);
+        border-radius: 18px;
+        border: 1px solid var(--stroke);
+        min-height: 110px;
+        padding: 0.6rem;
+        display: grid;
+        gap: 0.35rem;
+        box-shadow: var(--shadow-neumorphic);
+        position: relative;
+      }
+      .month-cell.muted {
+        opacity: 0.55;
+      }
+      .cell-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+      }
+      .cell-date {
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .cell-hours {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .event-pill {
+        border-radius: 12px;
+        padding: 0.35rem 0.5rem;
+        background: rgba(63, 122, 255, 0.08);
+        border: 1px solid rgba(63, 122, 255, 0.12);
+        font-size: 12px;
+        display: grid;
+        gap: 2px;
+      }
+      .event-pill .meta {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .event-pill.green {
+        background: rgba(76, 195, 138, 0.12);
+        border-color: rgba(76, 195, 138, 0.22);
+      }
+      .event-pill.amber {
+        background: rgba(245, 183, 78, 0.16);
+        border-color: rgba(245, 183, 78, 0.28);
+      }
+      .event-pill.red {
+        background: rgba(229, 83, 83, 0.12);
+        border-color: rgba(229, 83, 83, 0.24);
+      }
+      .mini-calendar {
+        background: linear-gradient(135deg, #f7f9ff, #ffffff);
+        border-radius: 18px;
+        padding: 0.75rem;
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow-soft);
+      }
+      .filter-stack {
+        display: grid;
+        gap: 0.5rem;
+      }
+      .side-panel {
+        display: grid;
+        gap: 0.8rem;
+        align-content: start;
+      }
+      .profile-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 1rem;
+      }
+      .profile-sidebar {
+        background: var(--panel);
+        border-radius: var(--radius-card);
+        border: 1px solid var(--stroke);
+        padding: 1rem;
+        box-shadow: var(--shadow-soft);
+      }
+      .profile-main {
+        display: grid;
+        gap: 1rem;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+      }
       @media (max-width: 960px) {
         .app-frame {
           grid-template-columns: 1fr;
@@ -1138,6 +1314,30 @@
             <h2 style="margin:0;">{{ page_title|default('Dashboard general') }}</h2>
           </div>
           <div class="topbar-actions">
+            <details class="notif-center">
+              <summary aria-label="Notificaciones" class="icon-button">
+                <span class="bell-dot" aria-hidden="true">🔔</span>
+                {% if notification_feed and notification_feed|length > 0 %}
+                <span class="badge">{{ notification_feed|length }}</span>
+                {% endif %}
+              </summary>
+              <div class="notif-panel">
+                <div class="notif-header">
+                  <strong>Centro de notificaciones</strong>
+                  <p class="muted">Avisos de vacaciones, fichajes y anuncios internos.</p>
+                </div>
+                <ul class="clean-list">
+                  {% for note in notification_feed %}
+                  <li class="notify {{ note.category.value }}">
+                    <div class="notify-title">{{ note.message }}</div>
+                    <small>{{ note.created_at.strftime('%d/%m %H:%M') }}</small>
+                  </li>
+                  {% else %}
+                  <li class="muted">Sin avisos por ahora.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </details>
             <a class="pill-button" href="{{ url_for('admin_view') }}">Admin</a>
             {% if active_collaborator %}
             <a class="pill-button" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}">Mi portal</a>
