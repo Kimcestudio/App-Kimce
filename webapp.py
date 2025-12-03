@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import socket
 from dataclasses import dataclass
+import calendar as pycal
 from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional
@@ -11,7 +12,17 @@ from typing import Dict, List, Optional
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from app_kimce.admin import AdminPortal
-from app_kimce.models import Collaborator, RequestStatus, RequestType, Role
+from app_kimce.models import (
+    Collaborator,
+    Document,
+    Evaluation,
+    KPIRecord,
+    NotificationCategory,
+    RequestStatus,
+    RequestType,
+    Role,
+    WorkModality,
+)
 from app_kimce.portal import CollaboratorPortal, FlowError
 
 app = Flask(__name__)
@@ -54,13 +65,17 @@ class AccessRequest:
 def _bootstrap_collaborators() -> List[Collaborator]:
     """Genera colaboradores demo para la interfaz."""
 
-    return [
+    collabs = [
         Collaborator(
             "COL-001",
             "Ana Pérez",
             timedelta(hours=8),
             "ana@kimce.studio",
             position="Directora Creativa",
+            area="Creatividad",
+            modality=WorkModality.FULL_TIME,
+            start_date=date(2021, 3, 15),
+            phone="+51 999 111 222",
             role=Role.ADMIN,
         ),
         Collaborator(
@@ -69,9 +84,50 @@ def _bootstrap_collaborators() -> List[Collaborator]:
             timedelta(hours=8),
             "luis@kimce.studio",
             position="Diseñador Senior",
+            area="Diseño",
+            modality=WorkModality.FULL_TIME,
+            start_date=date(2022, 7, 1),
+            phone="+51 999 333 444",
             role=Role.COLLABORATOR,
         ),
     ]
+    collabs[0].documents.extend(
+        [
+            Document("Contrato laboral", "Contrato", datetime(2024, 1, 10, 9, 0), version="v2"),
+            Document("Reglamento interno", "Reglamento", datetime(2024, 5, 2, 10, 30), notes="Aceptado"),
+        ]
+    )
+    collabs[1].documents.extend(
+        [Document("Contrato laboral", "Contrato", datetime(2023, 8, 1, 9, 0), version="v1")]
+    )
+    collabs[0].kpis.extend(
+        [
+            KPIRecord("2024-09", hours_worked=138.5, hours_expected=144.0, punctuality=96.0, project_compliance=92.0, qualitative_score=4.8),
+            KPIRecord("2024-08", hours_worked=142.0, hours_expected=148.0, punctuality=94.0, project_compliance=90.0, qualitative_score=4.6),
+        ]
+    )
+    collabs[1].kpis.extend(
+        [KPIRecord("2024-09", hours_worked=130.0, hours_expected=144.0, punctuality=91.0, project_compliance=89.0, qualitative_score=4.4)]
+    )
+    collabs[0].evaluations.append(
+        Evaluation(
+            period="2024-Q3",
+            self_review="Priorizo coordinación en activaciones.",
+            leader_review="Liderazgo sólido y mejoras en puntualidad.",
+            score=4.7,
+            reviewer="Luis",
+        )
+    )
+    collabs[1].evaluations.append(
+        Evaluation(
+            period="2024-Q3",
+            self_review="Busco más feedback en entregas.",
+            leader_review="Consistente y propositivo.",
+            score=4.4,
+            reviewer="Ana",
+        )
+    )
+    return collabs
 
 
 collaborators = _bootstrap_collaborators()
@@ -98,6 +154,15 @@ for index, collaborator in enumerate(collaborators):
         updated_at=updated_at,
     )
 admin_portal = AdminPortal(collaborators)
+admin_portal.create_announcement(
+    "Nueva activación cliente B", "Coordina tu disponibilidad esta semana.", NotificationCategory.INFO
+)
+admin_portal.create_announcement(
+    "Reglamento actualizado", "Descarga la versión vigente desde tu perfil.", NotificationCategory.WARNING
+)
+admin_portal.push_notification(
+    "Tienes vacaciones aprobadas la próxima semana.", NotificationCategory.SUCCESS, collaborator_id="COL-002"
+)
 
 
 def _hours_to_hhmm(value) -> str:
@@ -172,6 +237,7 @@ def home() -> str:
         "total": len(access_list),
         "pending": len([a for a in access_list if a.status == AccessStatus.PENDING]),
     }
+    announcements = sorted(admin_portal.announcements, key=lambda a: a.created_at, reverse=True)
     return render_template(
         "home.html",
         collaborator_cards=collaborator_cards,
@@ -182,6 +248,7 @@ def home() -> str:
         access_counts=access_counts,
         Role=Role,
         AccessStatus=AccessStatus,
+        announcements=announcements,
     )
 
 
@@ -263,6 +330,7 @@ def collaborator_view(collaborator_id: str) -> str:
         action_state=portal.action_availability(today),
         today_entry=today_entry,
         today=today,
+        notifications=admin_portal.list_notifications(collaborator_id),
     )
 
 
@@ -291,6 +359,7 @@ def collaborator_profile(collaborator_id: str) -> str:
         approved_requests=approved,
         upcoming_requests=sorted(upcoming, key=lambda r: r.payload.get("inicio")),
         RequestType=RequestType,
+        notifications=admin_portal.list_notifications(collaborator_id),
     )
 
 
@@ -345,6 +414,92 @@ def collaborator_request(collaborator_id: str):  # type: ignore[override]
     portal.create_request(request_type, payload)
     flash("Solicitud enviada", "success")
     return redirect(url_for("collaborator_view", collaborator_id=collaborator_id))
+
+
+@app.route("/calendario/<collaborator_id>")
+def collaborator_calendar(collaborator_id: str) -> str:
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
+    portal = collaborator_portals[collaborator_id]
+    collaborator = portal.collaborator
+    today = date.today()
+    month = int(request.args.get("month", today.month))
+    year = int(request.args.get("year", today.year))
+    events = admin_portal.calendar_for_collaborator(collaborator_id, month, year)
+    days_in_month = pycal.monthrange(year, month)[1]
+    day_cards = []
+    for day in range(1, days_in_month + 1):
+        current = date(year, month, day)
+        entry = next((e for e in collaborator.history.time_entries if e.day == current), None)
+        worked = entry.worked_timedelta() if entry else timedelta(0)
+        expected = collaborator.expected_hours_for_day(current)
+        day_events = [
+            ev
+            for ev in events
+            if ev.start.date() <= current <= ev.end.date()
+        ]
+        day_cards.append(
+            {
+                "day": current,
+                "worked": worked,
+                "expected": expected,
+                "events": day_events,
+            }
+        )
+    prev_month = month - 1 or 12
+    prev_year = year - 1 if month == 1 else year
+    next_month = month + 1 if month < 12 else 1
+    next_year = year + 1 if month == 12 else year
+    return render_template(
+        "calendar.html",
+        collaborator=collaborator,
+        day_cards=day_cards,
+        month=month,
+        year=year,
+        prev_month=prev_month,
+        prev_year=prev_year,
+        next_month=next_month,
+        next_year=next_year,
+        notifications=admin_portal.list_notifications(collaborator_id),
+    )
+
+
+@app.post("/calendario/<collaborator_id>/evento")
+def collaborator_calendar_event(collaborator_id: str):  # type: ignore[override]
+    if not _require_session(collaborator_id):
+        return redirect(url_for("login", next=collaborator_id))
+    portal = collaborator_portals[collaborator_id]
+    kind = request.form.get("kind") or ""
+    day = request.form.get("day") or ""
+    start_time = request.form.get("start_time") or "09:00"
+    end_time = request.form.get("end_time") or start_time
+    title = request.form.get("title") or "Actividad"
+    month = request.form.get("month")
+    year = request.form.get("year")
+    try:
+        start_dt = datetime.fromisoformat(f"{day}T{start_time}:00")
+        end_dt = datetime.fromisoformat(f"{day}T{end_time}:00")
+    except ValueError:
+        flash("Formato de fecha u hora inválido", "error")
+        return redirect(url_for("collaborator_calendar", collaborator_id=collaborator_id, month=month, year=year))
+    if kind == "actividad":
+        payload = {"inicio": start_dt.isoformat(), "fin": end_dt.isoformat(), "actividad": title}
+        portal.create_request(RequestType.SPECIAL_ACTIVITY, payload)
+        flash("Actividad enviada al panel", "success")
+    elif kind == "extra":
+        delta = end_dt - start_dt
+        hours = max(delta.total_seconds() / 3600, 0.0)
+        payload = {
+            "inicio": start_dt.isoformat(),
+            "fin": end_dt.isoformat(),
+            "horas": f"{hours:.2f}",
+            "actividad": title,
+        }
+        portal.create_request(RequestType.OVERTIME, payload)
+        flash("Horas extra solicitadas", "success")
+    else:
+        flash("Selecciona actividad o horas extra", "error")
+    return redirect(url_for("collaborator_calendar", collaborator_id=collaborator_id, month=month, year=year))
 
 
 @app.route("/admin")

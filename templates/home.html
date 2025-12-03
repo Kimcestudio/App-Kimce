@@ -135,6 +135,18 @@
         <p class="quiet-label" style="margin-top:0.9rem;">No hay eventos registrados.</p>
         {% endif %}
       </article>
+      <article class="widget">
+        <p class="tag">Comunicados</p>
+        <h3 style="margin:0;">Anuncios internos</h3>
+        <p class="quiet-label">Vacaciones aprobadas, deadlines y avisos del equipo</p>
+        <ul class="clean-list" style="margin-top:0.8rem;">
+          {% for ann in announcements %}
+          <li class="notify {{ ann.category.value }}" style="margin:0;">{{ ann.title }} · {{ ann.body }}</li>
+          {% else %}
+          <li class="muted">Sin comunicados.</li>
+          {% endfor %}
+        </ul>
+      </article>
     </div>
 
     <section class="card" style="margin-top:0.5rem;">

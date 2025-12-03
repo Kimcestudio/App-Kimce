@@ -5,9 +5,12 @@ from datetime import date, datetime, timedelta
 from typing import Dict, Iterable, List, Optional
 
 from .models import (
+    Announcement,
     CalendarEvent,
     Collaborator,
     Holiday,
+    Notification,
+    NotificationCategory,
     Request,
     RequestStatus,
     RequestType,
@@ -23,6 +26,8 @@ class AdminPortal:
         self.holidays: List[Holiday] = []
         self.requests: List[Request] = []
         self.calendar_events: List[CalendarEvent] = []
+        self.notifications: List[Notification] = []
+        self.announcements: List[Announcement] = []
 
     # --- Gestión de feriados ---------------------------------------------
     def create_holiday(
@@ -151,6 +156,16 @@ class AdminPortal:
                 )
         return sorted(events, key=lambda e: e.start)
 
+    def calendar_for_collaborator(self, collaborator_id: str, month: int, year: int) -> List[CalendarEvent]:
+        """Filtra el calendario para un colaborador y agrega feriados aplicables."""
+
+        scoped = [
+            event
+            for event in self.build_calendar(month, year)
+            if not event.collaborator_id or event.collaborator_id == collaborator_id
+        ]
+        return sorted(scoped, key=lambda e: e.start)
+
     # --- Reportes --------------------------------------------------------
     def pending_requests(self) -> List[Request]:
         self.ingest_requests()
@@ -177,6 +192,29 @@ class AdminPortal:
             "horas_a_favor": max(0.0, total_balance.total_seconds() / 3600),
             "horas_deuda": max(0.0, -total_balance.total_seconds() / 3600),
         }
+
+    # --- Comunicación ----------------------------------------------------
+    def push_notification(
+        self, message: str, category: NotificationCategory, collaborator_id: str | None = None
+    ) -> Notification:
+        notification = Notification(
+            message=message,
+            category=category,
+            created_at=datetime.utcnow(),
+            collaborator_id=collaborator_id,
+        )
+        self.notifications.append(notification)
+        return notification
+
+    def list_notifications(self, collaborator_id: str) -> List[Notification]:
+        return [n for n in self.notifications if n.collaborator_id in (None, collaborator_id)]
+
+    def create_announcement(
+        self, title: str, body: str, category: NotificationCategory = NotificationCategory.INFO
+    ) -> Announcement:
+        announcement = Announcement(title=title, body=body, created_at=datetime.utcnow(), category=category)
+        self.announcements.append(announcement)
+        return announcement
 
     def export_history(self, collaborator_id: str) -> List[Dict[str, str]]:
         collaborator = self.collaborators[collaborator_id]

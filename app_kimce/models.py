@@ -33,6 +33,14 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class WorkModality(str, Enum):
+    """Modalidad laboral para el perfil del colaborador."""
+
+    FULL_TIME = "full_time"
+    PART_TIME = "part_time"
+    PROJECT = "proyecto"
+
+
 class ActivityType(str, Enum):
     """Tipo de actividad especial registrada."""
 
@@ -95,6 +103,70 @@ class CalendarEvent:
     end: datetime
     collaborator_id: Optional[str] = None
     metadata: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class Document:
+    """Documento asociado al expediente del colaborador."""
+
+    name: str
+    kind: str
+    uploaded_at: datetime
+    version: str = "v1"
+    url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@dataclass
+class Evaluation:
+    """Evaluación interna del colaborador."""
+
+    period: str  # ej. "2024-Q2"
+    self_review: Optional[str] = None
+    leader_review: Optional[str] = None
+    score: Optional[float] = None
+    reviewer: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+
+@dataclass
+class KPIRecord:
+    """Indicadores clave por colaborador y ciclo."""
+
+    period: str  # ej. "2024-09"
+    hours_worked: float
+    hours_expected: float
+    punctuality: float
+    project_compliance: float
+    qualitative_score: float
+
+
+class NotificationCategory(str, Enum):
+    INFO = "info"
+    SUCCESS = "success"
+    WARNING = "warning"
+    ALERT = "alert"
+
+
+@dataclass
+class Notification:
+    """Avisos internos dirigidos a un colaborador."""
+
+    message: str
+    category: NotificationCategory
+    created_at: datetime
+    collaborator_id: Optional[str] = None
+    read: bool = False
+
+
+@dataclass
+class Announcement:
+    """Anuncios globales para el equipo."""
+
+    title: str
+    body: str
+    created_at: datetime
+    category: NotificationCategory = NotificationCategory.INFO
 
 
 @dataclass
@@ -161,8 +233,15 @@ class Collaborator:
     expected_daily_hours: timedelta
     email: str
     position: Optional[str] = None
+    area: Optional[str] = None
+    modality: WorkModality = WorkModality.FULL_TIME
+    start_date: Optional[date] = None
+    phone: Optional[str] = None
     role: Role = Role.COLLABORATOR
     weekday_hours: Dict[int, timedelta] = field(default_factory=dict)
+    documents: List[Document] = field(default_factory=list)
+    evaluations: List[Evaluation] = field(default_factory=list)
+    kpis: List[KPIRecord] = field(default_factory=list)
     history: CollaboratorHistory = field(init=False)
 
     def __post_init__(self) -> None:

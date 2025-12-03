@@ -24,6 +24,8 @@ Plataforma interna de Kimce Studio diseñada para centralizar la operación diar
 - Calendario integrado con vista mensual, semanal y por colaborador.
 - Flujo completo de solicitudes y aprobaciones entre colaborador y admin con historial trazable.
 - Panel de control para visualizar indicadores clave del equipo en tiempo real.
+- Dashboard visual con tarjetas redondeadas, sombras suaves, line/donut/barras estilizadas y paleta azul Kimce con acentos de estado.
+- Calendario tipo Google para registrar actividades extra y ver vacaciones/feriados por día.
 
 ## Portal del colaborador
 

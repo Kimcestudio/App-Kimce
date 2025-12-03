@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <p class="tag">Mi perfil</p>
-  <h1>{{ collaborator.full_name }}</h1>
-  <p class="page-subtitle">{{ collaborator.position or 'Puesto no asignado' }} · {{ collaborator.email }}</p>
+<section class="hero" style="display:grid; grid-template-columns: 110px 1fr; gap: 1.25rem; align-items:center;">
+  <div class="avatar" aria-hidden="true">{{ collaborator.full_name[0] }}</div>
+  <div>
+    <p class="tag">Mi perfil</p>
+    <h1>{{ collaborator.full_name }}</h1>
+    <p class="page-subtitle">{{ collaborator.position or 'Puesto no asignado' }} · {{ collaborator.area or 'Área' }}</p>
+    <p class="page-subtitle">{{ collaborator.email }} · {{ collaborator.phone or 'Teléfono pendiente' }}</p>
+  </div>
 </section>
 <section class="stat-grid" style="margin-bottom:1.5rem;">
   <div class="stat-card">
@@ -11,12 +15,12 @@
     <p class="stat-value">{{ collaborator.role.value|title }}</p>
   </div>
   <div class="stat-card">
-    <p class="stat-label">Horas trabajadas (semana)</p>
-    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+    <p class="stat-label">Modalidad</p>
+    <p class="stat-value">{{ collaborator.modality.value.replace('_',' ') }}</p>
   </div>
   <div class="stat-card">
-    <p class="stat-label">Horas esperadas</p>
-    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+    <p class="stat-label">Antigüedad</p>
+    <p class="stat-value">{{ collaborator.start_date or 'N/D' }}</p>
   </div>
   <div class="stat-card">
     <p class="stat-label">Saldo</p>
@@ -24,6 +28,69 @@
   </div>
 </section>
 <div class="card-grid">
+  <section class="card">
+    <h2>Documentos</h2>
+    {% if collaborator.documents %}
+    <ul class="clean-list">
+      {% for doc in collaborator.documents %}
+      <li class="list-row">
+        <div class="list-row__main">
+          <div>
+            <p class="tag ghost">{{ doc.kind }}</p>
+            <h3>{{ doc.name }}</h3>
+            <p class="page-subtitle">{{ doc.version }} · {{ doc.uploaded_at.strftime('%d/%m/%Y') }}{% if doc.notes %} · {{ doc.notes }}{% endif %}</p>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="page-subtitle">Aún no tienes documentos cargados.</p>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2>KPI y rendimiento</h2>
+    {% if collaborator.kpis %}
+    <table>
+      <thead><tr><th>Periodo</th><th>Trab.</th><th>Esp.</th><th>Puntualidad</th><th>Proyectos</th><th>Quali</th></tr></thead>
+      <tbody>
+        {% for kpi in collaborator.kpis %}
+        <tr>
+          <td>{{ kpi.period }}</td>
+          <td>{{ kpi.hours_worked|round(1) }}</td>
+          <td>{{ kpi.hours_expected|round(1) }}</td>
+          <td>{{ kpi.punctuality }}%</td>
+          <td>{{ kpi.project_compliance }}%</td>
+          <td>{{ kpi.qualitative_score }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="page-subtitle">Sin KPIs registrados.</p>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2>Evaluaciones</h2>
+    {% if collaborator.evaluations %}
+    <div class="stacked-list">
+      {% for ev in collaborator.evaluations %}
+      <article class="list-row">
+        <div class="list-row__main">
+          <p class="tag ghost">{{ ev.period }}</p>
+          <div>
+            <h3>Score {{ ev.score or 'N/D' }} · {{ ev.reviewer or 'Líder' }}</h3>
+            <p class="page-subtitle">Auto: {{ ev.self_review or 'N/D' }}</p>
+            <p class="page-subtitle">Líder: {{ ev.leader_review or 'N/D' }}</p>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="page-subtitle">Aún no tienes evaluaciones.</p>
+    {% endif %}
+  </section>
   <section class="card">
     <h2>Próximos eventos</h2>
     {% if upcoming_requests %}
@@ -45,19 +112,14 @@
     {% endif %}
   </section>
   <section class="card">
-    <h2>Historial aprobado</h2>
-    {% if approved_requests %}
-    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.6rem;">
-      {% for req in approved_requests|reverse %}
-      <li class="chip-row">
-        <span class="tag ghost">{{ req.request_type.value|title }}</span>
-        <span class="page-subtitle">{{ req.payload.get('inicio', '') }}{% if req.payload.get('fin') %} → {{ req.payload.get('fin') }}{% endif %}</span>
-      </li>
+    <h2>Notificaciones</h2>
+    <ul class="clean-list">
+      {% for note in notifications %}
+      <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+      {% else %}
+      <li class="muted">Sin avisos por ahora.</li>
       {% endfor %}
     </ul>
-    {% else %}
-    <p class="page-subtitle">Aún no tienes solicitudes aprobadas.</p>
-    {% endif %}
   </section>
 </div>
 {% endblock %}

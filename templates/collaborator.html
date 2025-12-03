@@ -35,6 +35,25 @@
   </div>
 </section>
 <section class="card" style="margin-bottom:2rem;">
+  <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items:flex-start;">
+    <div>
+      <h3>Notificaciones</h3>
+      <ul class="clean-list">
+        {% for note in notifications %}
+        <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+        {% else %}
+        <li class="muted">Sin avisos por ahora.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div>
+      <h3>Calendario</h3>
+      <p class="page-subtitle">Revisa tus vacaciones, feriados y actividades extra con un layout tipo Google Calendar.</p>
+      <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id) }}">Abrir calendario</a>
+    </div>
+  </div>
+</section>
+<section class="card" style="margin-bottom:2rem;">
   <div class="page-header" style="align-items:flex-start;">
     <div>
       <h2>Marcaciones rápidas</h2>
