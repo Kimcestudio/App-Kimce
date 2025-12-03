@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="tag">Mi perfil</p>
+  <h1>{{ collaborator.full_name }}</h1>
+  <p class="page-subtitle">{{ collaborator.position or 'Puesto no asignado' }} · {{ collaborator.email }}</p>
+</section>
+<section class="stat-grid" style="margin-bottom:1.5rem;">
+  <div class="stat-card">
+    <p class="stat-label">Rol</p>
+    <p class="stat-value">{{ collaborator.role.value|title }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas trabajadas (semana)</p>
+    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas esperadas</p>
+    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Saldo</p>
+    <p class="stat-value">+{{ balance.horas_a_favor|hhmm }} / -{{ balance.horas_deuda|hhmm }}</p>
+  </div>
+</section>
+<div class="card-grid">
+  <section class="card">
+    <h2>Próximos eventos</h2>
+    {% if upcoming_requests %}
+    <div class="stacked-list">
+      {% for req in upcoming_requests %}
+      <article class="list-row">
+        <div class="list-row__main">
+          <p class="tag ghost">{{ req.request_type.value|title }}</p>
+          <div>
+            <h3>{{ req.payload.get('inicio')[:10] }} → {{ req.payload.get('fin')[:10] }}</h3>
+            <p class="page-subtitle">Aprobado por {{ req.reviewer or 'Admin' }}</p>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="page-subtitle">No tienes eventos próximos.</p>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2>Historial aprobado</h2>
+    {% if approved_requests %}
+    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.6rem;">
+      {% for req in approved_requests|reverse %}
+      <li class="chip-row">
+        <span class="tag ghost">{{ req.request_type.value|title }}</span>
+        <span class="page-subtitle">{{ req.payload.get('inicio', '') }}{% if req.payload.get('fin') %} → {{ req.payload.get('fin') }}{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="page-subtitle">Aún no tienes solicitudes aprobadas.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
