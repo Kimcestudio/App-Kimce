@@ -229,11 +229,19 @@ def home() -> str:
 
     week_start = _current_week_start()
     collaborator_cards = []
+    active_today = []
     for portal in collaborator_portals.values():
+        summary = portal.week_summary(week_start)
+        entry_today = next(
+            (e for e in portal.collaborator.history.time_entries if e.day == date.today()),
+            None,
+        )
+        if entry_today and entry_today.check_in and not entry_today.check_out:
+            active_today.append(portal.collaborator)
         collaborator_cards.append(
             {
                 "collaborator": portal.collaborator,
-                "summary": portal.week_summary(week_start),
+                "summary": summary,
                 "balance": portal.balance_overview(),
                 "indicator": portal.weekly_indicator(week_start),
             }
@@ -248,23 +256,62 @@ def home() -> str:
     holidays = admin_portal.list_holidays()
     today = date.today()
     calendar = admin_portal.build_calendar(today.month, today.year)
+    events_by_day: Dict[date, List] = {}
+    for event in calendar:
+        events_by_day.setdefault(event.start.date(), []).append(event)
     access_list = list(access_requests.values())
     access_counts = {
         "total": len(access_list),
         "pending": len([a for a in access_list if a.status == AccessStatus.PENDING]),
     }
     announcements = sorted(admin_portal.announcements, key=lambda a: a.created_at, reverse=True)
+    pending_requests = [req for req in admin_portal.pending_requests() if req.status == RequestStatus.PENDING]
+    total_requests = len(admin_portal.requests)
+    requests_completion = 0
+    if total_requests:
+        completed = len([r for r in admin_portal.requests if r.status == RequestStatus.APPROVED])
+        requests_completion = int((completed / total_requests) * 100)
+    worked_today = timedelta()
+    expected_today = timedelta()
+    for portal in collaborator_portals.values():
+        entry = next((e for e in portal.collaborator.history.time_entries if e.day == today), None)
+        if entry:
+            worked_today += entry.worked_timedelta()
+        expected_today += portal.collaborator.expected_hours_for_day(today)
+    month_grid = pycal.Calendar().monthdatescalendar(today.year, today.month)
+    day_totals: Dict[date, Dict[str, timedelta]] = {}
+    for week in month_grid:
+        for day in week:
+            worked = timedelta()
+            expected = timedelta()
+            for portal in collaborator_portals.values():
+                entry = next((e for e in portal.collaborator.history.time_entries if e.day == day), None)
+                if entry:
+                    worked += entry.worked_timedelta()
+                expected += portal.collaborator.expected_hours_for_day(day)
+            day_totals[day] = {"worked": worked, "expected": expected}
     return render_template(
         "home.html",
         collaborator_cards=collaborator_cards,
         admin_summary=admin_summary,
         holidays=holidays,
         calendar=calendar,
+        events_by_day=events_by_day,
+        month_grid=month_grid,
+        active_today=active_today,
+        day_totals=day_totals,
+        collaborators=admin_portal.collaborators,
         access_requests=access_list,
         access_counts=access_counts,
         Role=Role,
         AccessStatus=AccessStatus,
         announcements=announcements,
+        pending_requests=pending_requests,
+        requests_completion=requests_completion,
+        worked_today=worked_today,
+        expected_today=expected_today,
+        today=today,
+        page_title="Dashboard admin",
     )
 
 
@@ -398,9 +445,21 @@ def collaborator_dashboard() -> str:
     month_events = admin_portal.calendar_for_collaborator(
         collaborator_id, today.month, today.year
     )
+    events_by_day: Dict[date, List] = {}
+    for event in month_events:
+        events_by_day.setdefault(event.start.date(), []).append(event)
     upcoming_events = [
         ev for ev in month_events if ev.start.date() >= today
     ]
+    entry_today = next((e for e in collaborator.history.time_entries if e.day == today), None)
+    month_grid = pycal.Calendar().monthdatescalendar(today.year, today.month)
+    day_totals: Dict[date, Dict[str, timedelta]] = {}
+    for week in month_grid:
+        for day in week:
+            entry = next((e for e in collaborator.history.time_entries if e.day == day), None)
+            worked = entry.worked_timedelta() if entry else timedelta()
+            expected = collaborator.expected_hours_for_day(day)
+            day_totals[day] = {"worked": worked, "expected": expected}
 
     return render_template(
         "dashboard_collaborator.html",
@@ -412,6 +471,11 @@ def collaborator_dashboard() -> str:
         upcoming_events=sorted(upcoming_events, key=lambda e: e.start),
         notifications=admin_portal.list_notifications(collaborator_id),
         today=today,
+        events_by_day=events_by_day,
+        month_grid=month_grid,
+        entry_today=entry_today,
+        day_totals=day_totals,
+        page_title="Mi dashboard",
     )
 
 
