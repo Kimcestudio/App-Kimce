@@ -1,0 +1,269 @@
+{% block content %}
+<section class="hero">
+  <p class="tag">Admin</p>
+  <h1>Dashboard operativo</h1>
+  <p>Panel consolidado con métricas globales, calendario visible y módulos separados para equipo, solicitudes, feriados y accesos.</p>
+</section>
+
+<section id="dashboard" class="stat-grid" style="margin:1.5rem 0 1rem;">
+  <div class="stat-card">
+    <p class="stat-label">Horas trabajadas</p>
+    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+    <p class="quiet-label">Equipo semanal</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas esperadas</p>
+    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+    <p class="quiet-label">Incluye jornada 8h + sábado 4h</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas extra</p>
+    <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
+    <p class="quiet-label">Balance global</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Solicitudes pendientes</p>
+    <p class="stat-value">{{ requests|length }}</p>
+    <p class="quiet-label">A la espera de revisión</p>
+  </div>
+</section>
+
+<div class="card-grid" style="margin-top:1rem; grid-template-columns: 1.4fr 1fr;" id="calendario">
+  <section class="card" style="margin:0;">
+    <div class="pill-header">
+      <div>
+        <p class="tag">Calendario</p>
+        <h2 style="margin:0;">Mes en curso</h2>
+        <p class="page-subtitle">Eventos, feriados y vacaciones visibles en un solo bloque.</p>
+      </div>
+    </div>
+    {% if calendar %}
+    <table>
+      <thead>
+        <tr>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th>Título</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in calendar %}
+        <tr>
+          <td>{{ event.start }}</td>
+          <td>{{ event.end }}</td>
+          <td>{{ event.title }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="quiet-label">No hay eventos registrados.</p>
+    {% endif %}
+  </section>
+  <section class="card" style="margin:0;">
+    <div class="pill-header" style="align-items:flex-start;">
+      <div>
+        <p class="tag">Anuncios</p>
+        <h3 style="margin:0;">Estado del día</h3>
+        <p class="quiet-label">Feriados activos y vacantes de acceso.</p>
+      </div>
+    </div>
+    <ul class="clean-list" style="margin-top:0.75rem;">
+      <li class="chip-row">Feriados activos: {{ holidays|length }}</li>
+      <li class="chip-row">Solicitudes de acceso: {{ access_counts.total }} ({{ access_counts.pending }} pendientes)</li>
+      <li class="chip-row">Solicitudes pendientes: {{ requests|length }}</li>
+    </ul>
+  </section>
+</div>
+
+<section class="card" id="solicitudes" style="margin-top:1.5rem;">
+  <div class="pill-header" style="align-items:flex-start;">
+    <div>
+      <p class="tag">Solicitudes</p>
+      <h2 style="margin:0;">Bandeja unificada</h2>
+      <p class="page-subtitle">Vacaciones, permisos, horas extra y actividades especiales en un módulo limpio.</p>
+    </div>
+  </div>
+  {% if requests %}
+  <div class="stacked-list">
+    {% for req in requests %}
+    <article class="list-row">
+      <div class="list-row__main">
+        <p class="tag ghost">{{ req.collaborator_id }}</p>
+        <div>
+          <h3 style="margin:0;">{{ req.request_type.value|title }}</h3>
+          {% set start = req.payload.get('inicio') %}
+          {% set end = req.payload.get('fin') %}
+          <p class="page-subtitle">
+            {% if start %}{{ start }}{% if end %} → {{ end }}{% endif %}{% endif %}
+            {% if req.payload.get('hours') %} · {{ req.payload.get('hours')|hhmm }}{% endif %}
+            {% if req.payload.get('activity') %} · {{ req.payload.get('activity') }}{% endif %}
+            {% if req.payload.get('notes') %} · {{ req.payload.get('notes') }}{% endif %}
+          </p>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('admin_request_action', request_id=req.request_id) }}" class="list-row__actions">
+        <select name="action" required>
+          <option value="approve">Aprobar</option>
+          <option value="reject">Rechazar</option>
+          <option value="correction">Corrección</option>
+        </select>
+        <input type="text" name="comment" placeholder="Comentario" />
+        <button type="submit">Actualizar</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="quiet-label">No hay solicitudes pendientes.</p>
+  {% endif %}
+</section>
+
+<section class="card" id="equipo" style="margin-top:1.25rem;">
+  <div class="pill-header" style="align-items:flex-start;">
+    <div>
+      <p class="tag">Equipo</p>
+      <h2 style="margin:0;">Listado de colaboradores</h2>
+      <p class="page-subtitle">Rol, estado semanal y accesos rápidos a perfil y calendario.</p>
+    </div>
+  </div>
+  <div class="stacked-list" style="margin-top:0.75rem;">
+    {% for card in team_cards %}
+    {% set completion = (card.summary.horas_trabajadas / card.summary.horas_esperadas * 100) if card.summary.horas_esperadas else 0 %}
+    <article class="list-row" style="grid-template-columns: 1fr auto;">
+      <div class="list-row__main">
+        <div>
+          <p class="tag ghost" style="margin:0;">{{ card.collaborator.role.value|title }}</p>
+          <h3 style="margin:0.15rem 0 0;">{{ card.collaborator.full_name }}</h3>
+          <p class="quiet-label">{{ card.collaborator.position or 'Puesto pendiente' }} · {{ completion|round(0) }}% de avance</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:0.35rem; align-items:center;">
+        <span class="indicator-pill {{ card.indicator }}">{{ card.indicator }}</span>
+        <a class="ghost-link" href="{{ url_for('collaborator_profile', collaborator_id=card.collaborator.collaborator_id) }}">Perfil</a>
+        <a class="ghost-link" href="{{ url_for('collaborator_calendar', collaborator_id=card.collaborator.collaborator_id) }}">Calendario</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="card-grid" style="margin-top:1.25rem;" id="feriados">
+  <section class="card" style="margin:0;">
+    <div class="pill-header">
+      <div>
+        <p class="tag">Feriados</p>
+        <h2 style="margin:0;">Días especiales</h2>
+        <p class="page-subtitle">Crea feriados pagados o compensables sin mezclar con otras bandejas.</p>
+      </div>
+    </div>
+    {% if holidays %}
+    <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:0.5rem; margin:1rem 0;">
+      {% for holiday in holidays %}
+      <li>
+        <strong>{{ holiday.day }}</strong> · {{ holiday.name }}
+        <span class="tag" style="margin-left:0.5rem;">{{ 'Pagado' if holiday.paid else 'No pagado' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="quiet-label">Sin feriados configurados.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('admin_create_holiday') }}" style="margin-top:1rem;">
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <label>Nombre<input type="text" name="name" required /></label>
+        <label>Fecha<input type="date" name="day" required /></label>
+        <label style="flex-direction:row; align-items:center; gap:0.4rem;">
+          <input type="checkbox" name="paid" checked /> Pagado
+        </label>
+        <label style="flex-direction:row; align-items:center; gap:0.4rem;">
+          <input type="checkbox" name="compensable" /> Compensable
+        </label>
+      </div>
+      <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+        <button type="submit">Agregar feriado</button>
+      </div>
+    </form>
+  </section>
+  <section class="card" style="margin:0;">
+    <div class="pill-header">
+      <div>
+        <p class="tag">Vacaciones</p>
+        <h2 style="margin:0;">Asignar bloque</h2>
+        <p class="page-subtitle">Registrar vacaciones desde admin sin esperar solicitud.</p>
+      </div>
+    </div>
+    <form method="post" action="{{ url_for('admin_assign_vacation') }}" class="stacked-list">
+      <label>Colaborador
+        <select name="collaborator_id" required>
+          <option value="">Selecciona</option>
+          {% for portal in collaborators %}
+          <option value="{{ portal.collaborator.collaborator_id }}">{{ portal.collaborator.full_name }} ({{ portal.collaborator.collaborator_id }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+        <label>Inicio<input type="date" name="start" required /></label>
+        <label>Fin<input type="date" name="end" /></label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+        <button type="submit">Asignar vacaciones</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<section class="card access-card" id="accesos" style="margin-top:1.5rem;">
+  <div class="page-header access-header" style="align-items:flex-start;">
+    <div>
+      <p class="tag">Accesos y roles</p>
+      <h2>Solicitudes de acceso</h2>
+      <p class="page-subtitle">Gestión dedicada de correos corporativos, rol (Admin/Colaborador) y puesto.</p>
+    </div>
+    <div class="access-head-actions">
+      <input type="search" placeholder="Buscar por nombre o correo" />
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap; justify-content:flex-end; width:100%;">
+        <span class="pill-count">{{ access_counts.total }} usuarios</span>
+        <span class="pill-count pending">{{ access_counts.pending }} pendientes</span>
+      </div>
+    </div>
+  </div>
+  {% if access_requests %}
+  <div class="access-list">
+    {% for req in access_requests %}
+    <article class="access-item">
+      <div class="access-user">
+        <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+        <div>
+          <div class="access-name">{{ req.collaborator_name }}</div>
+          <div class="access-sub">
+            <span>{{ req.email }}</span>
+            <span>• {{ req.collaborator_id }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="access-status">
+        {% set status_class = 'gray' %}
+        {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
+        <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
+        <p class="micro-copy">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
+      </div>
+      <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="access-actions">
+        <select name="role">
+          <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+          <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+        </select>
+        <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
+        <div class="access-buttons">
+          <button type="submit" name="action" value="approve">Aprobar</button>
+          <button type="submit" name="action" value="deny" class="button-ghost">Denegar</button>
+        </div>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="quiet-label">No hay solicitudes de acceso registradas.</p>
+  {% endif %}
+</section>
+{% endblock %}
