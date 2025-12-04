@@ -1,32 +1,34 @@
+{% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <p class="tag">Admin</p>
-  <h1>Dashboard operativo</h1>
-  <p>Panel consolidado con métricas globales, calendario visible y módulos separados para equipo, solicitudes, feriados y accesos.</p>
-</section>
+<div class="dashboard-main">
+  <section class="hero">
+    <p class="tag">Admin</p>
+    <h1>Dashboard operativo</h1>
+    <p>Panel consolidado con métricas globales, calendario visible y módulos separados para equipo, solicitudes, feriados y accesos.</p>
+  </section>
 
-<section id="dashboard" class="stat-grid" style="margin:1.5rem 0 1rem;">
-  <div class="stat-card">
-    <p class="stat-label">Horas trabajadas</p>
-    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
-    <p class="quiet-label">Equipo semanal</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas esperadas</p>
-    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
-    <p class="quiet-label">Incluye jornada 8h + sábado 4h</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Horas extra</p>
-    <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
-    <p class="quiet-label">Balance global</p>
-  </div>
-  <div class="stat-card">
-    <p class="stat-label">Solicitudes pendientes</p>
-    <p class="stat-value">{{ requests|length }}</p>
-    <p class="quiet-label">A la espera de revisión</p>
-  </div>
-</section>
+  <section id="dashboard" class="stat-grid" style="margin:1.5rem 0 1rem;">
+    <div class="stat-card">
+      <p class="stat-label">Horas trabajadas</p>
+      <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+      <p class="quiet-label">Equipo semanal</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Horas esperadas</p>
+      <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+      <p class="quiet-label">Incluye jornada 8h + sábado 4h</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Horas extra</p>
+      <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
+      <p class="quiet-label">Balance global</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Solicitudes pendientes</p>
+      <p class="stat-value">{{ requests|length }}</p>
+      <p class="quiet-label">A la espera de revisión</p>
+    </div>
+  </section>
 
 <div class="card-grid" style="margin-top:1rem; grid-template-columns: 1.4fr 1fr;" id="calendario">
   <section class="card" style="margin:0;">
@@ -265,5 +267,6 @@
   {% else %}
   <p class="quiet-label">No hay solicitudes de acceso registradas.</p>
   {% endif %}
-</section>
+  </section>
+</div>
 {% endblock %}
