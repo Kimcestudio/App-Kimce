@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% set page_title = 'Calendario' %}
+{% block content %}
+<div class="calendar-hero">
+  <div>
+    <p class="quiet-label">Calendario | {{ collaborator.full_name }}</p>
+    <h1>{{ month_name }} {{ year }}</h1>
+    <p class="muted">Visualiza horas trabajadas/esperadas por día, feriados, vacaciones y registra actividades u horas extra al estilo Google Calendar.</p>
+  </div>
+  <div class="chip-row">
+    <a class="pill-button ghost" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=prev_month, year=prev_year) }}">◀ Mes anterior</a>
+    <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=next_month, year=next_year) }}">Mes siguiente ▶</a>
+    <a class="pill-button ghost" href="{{ url_for('collaborator_view', collaborator_id=collaborator.collaborator_id) }}">Volver a mi portal</a>
+  </div>
+</div>
+
+<section class="calendar-shell">
+  <div class="calendar-board">
+    <div class="month-grid" style="margin-bottom:0.35rem;">
+      {% for day_name in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'] %}
+      <div class="weekday-label">{{ day_name }}</div>
+      {% endfor %}
+    </div>
+    <div class="month-grid">
+      {% for week in month_matrix %}
+        {% for current in week %}
+          {% set card = day_cards.get(current) %}
+          <div class="month-cell {{ 'muted' if current.month != month else '' }}">
+            <div class="cell-header">
+              <span class="cell-date">{{ current.day }}</span>
+              <span class="cell-hours">{{ card.worked|hhmm if card else '00:00' }} / {{ card.expected|hhmm if card else collaborator.expected_hours_for_day(current)|hhmm }}</span>
+            </div>
+            {% if card and card.events %}
+              {% for event in card.events %}
+              <div class="event-pill {{ 'green' if event.metadata and event.metadata.get('tipo') in ['feriado','vacaciones'] else '' }} {{ 'amber' if event.metadata and event.metadata.get('tipo') in ['actividad','permiso'] else '' }} {{ 'red' if event.metadata and event.metadata.get('tipo') in ['bloqueo','falta'] else '' }}">
+                <strong>{{ event.title }}</strong>
+                <span class="meta">{{ event.start.strftime('%H:%M') }} - {{ event.end.strftime('%H:%M') }}{% if event.metadata and event.metadata.get('tipo') %} · {{ event.metadata.get('tipo') }}{% endif %}</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="event-pill" style="opacity:0.55;">Sin eventos</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="mini-calendar">
+      <div class="pill-header" style="margin-bottom:0.5rem;">
+        <strong>{{ month_name }} {{ year }}</strong>
+        <div class="chip-row">
+          <a class="pill-button ghost" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=prev_month, year=prev_year) }}">◀</a>
+          <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id, month=next_month, year=next_year) }}">▶</a>
+        </div>
+      </div>
+      <div class="month-grid" style="grid-template-columns: repeat(7,1fr); gap:0.2rem; font-size:12px;">
+        {% for week in month_matrix %}
+          {% for current in week %}
+          <div class="weekday-label" style="padding:0.35rem; border-radius:10px; background: {{ '#d7e3ff' if current == date.today() else 'transparent' }}; border: 1px solid {{ 'rgba(63,122,255,0.2)' if current == date.today() else 'transparent' }}; color: {{ 'var(--ink)' if current.month == month else 'var(--muted)' }};">
+            {{ current.day }}
+          </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="pill-header">
+        <div>
+          <p class="quiet-label" style="margin:0;">Crear</p>
+          <h4 style="margin:0;">Actividad u horas extra</h4>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('collaborator_calendar_event', collaborator_id=collaborator.collaborator_id) }}" class="stacked">
+        <input type="hidden" name="month" value="{{ month }}" />
+        <input type="hidden" name="year" value="{{ year }}" />
+        <label class="quiet-label">Fecha</label>
+        <input name="day" type="date" value="{{ date(year, month, 1).isoformat() }}" />
+        <div class="grid two" style="gap:0.5rem;">
+          <div>
+            <label class="quiet-label">Inicio</label>
+            <input name="start_time" type="time" value="09:00" />
+          </div>
+          <div>
+            <label class="quiet-label">Fin</label>
+            <input name="end_time" type="time" value="18:00" />
+          </div>
+        </div>
+        <label class="quiet-label">Tipo</label>
+        <select name="kind">
+          <option value="actividad">Actividad especial</option>
+          <option value="extra">Horas extra</option>
+        </select>
+        <label class="quiet-label">Título</label>
+        <input name="title" type="text" placeholder="Reunión con cliente" />
+        <button type="submit" class="pill-button" style="width:100%; justify-content:center;">Agregar</button>
+      </form>
+    </div>
+
+    <div class="card filter-stack">
+      <div class="pill-header" style="margin-bottom:0.2rem;">
+        <strong>Filtros</strong>
+      </div>
+      <label><input type="checkbox" checked disabled /> Fichajes (trabajo/descanso)</label>
+      <label><input type="checkbox" checked disabled /> Ajustes y horas extra</label>
+      <label><input type="checkbox" checked disabled /> Feriados, días libres, vacaciones</label>
+      <label><input type="checkbox" checked disabled /> Mostrar pendientes</label>
+    </div>
+
+    <div class="card">
+      <p class="quiet-label">Ver colaborador</p>
+      <div class="chip-row" style="flex-wrap:wrap;">
+        {% for portal in collaborators %}
+        <a class="pill-button {{ 'ghost' if portal.collaborator.collaborator_id != collaborator.collaborator_id else '' }}" href="{{ url_for('collaborator_calendar', collaborator_id=portal.collaborator.collaborator_id, month=month, year=year) }}">{{ portal.collaborator.full_name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
