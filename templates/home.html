@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-main">
+    {% set expected = admin_summary.horas_esperadas %}
+    {% set worked = admin_summary.horas_trabajadas %}
+    {% set completion = (worked / expected * 100) if expected else 0 %}
+    <section class="hero">
+      <p class="tag">Dashboard</p>
+      <h1>Panel operativo Kimce</h1>
+      <p>
+        Vista neumórfica, azul Kimce con acentos verdes/ámbar y módulos aireados que replican el dashboard de referencia,
+        ahora con gráficos suaves y métricas semanales en HH:MM.
+      </p>
+      <div class="panel-grid" style="margin-top:1.1rem; align-items:center;">
+        <article class="widget">
+          <div class="pill-header">
+            <div>
+              <p class="tag">Tendencia semanal</p>
+              <h3 style="margin:0;">Horas capturadas</h3>
+              <p class="quiet-label">Curva suave estilo referencia</p>
+            </div>
+            <span class="pill-count">{{ collaborator_cards|length }} activos</span>
+          </div>
+          <div class="line-chart" aria-hidden="true">
+            <svg viewBox="0 0 320 140" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="lineGradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#3f7aff" stop-opacity="0.5" />
+                  <stop offset="100%" stop-color="#3f7aff" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path d="M0 110 C60 80 80 95 120 70 S200 40 260 60 320 30 320 30" fill="none" stroke="#3f7aff" stroke-width="3" stroke-linecap="round" />
+              <path d="M0 110 C60 80 80 95 120 70 S200 40 260 60 320 30 320 30" fill="url(#lineGradient)" stroke="none" opacity="0.25" />
+            </svg>
+          </div>
+          <div class="stat-grid" style="margin-top:0.8rem;">
+            <div class="stat-card">
+              <p class="stat-label">Horas trabajadas</p>
+              <p class="stat-value">{{ worked|hhmm }}</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-label">Horas esperadas</p>
+              <p class="stat-value">{{ expected|hhmm }}</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-label">Horas extra</p>
+              <p class="stat-value">{{ admin_summary.horas_extra|hhmm }}</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-label">Eventos</p>
+              <p class="stat-value">{{ holidays|length + calendar|length }}</p>
+            </div>
+          </div>
+        </article>
+        <article class="widget" style="display:grid; place-items:center; gap:0.6rem; text-align:center;">
+          <p class="tag">Cumplimiento</p>
+          <div class="donut" style="--percent: {{ completion|round(1) }};">
+            <span>{{ completion|round(1) }}%</span>
+          </div>
+          <p class="quiet-label">Horas registradas vs esperadas</p>
+          <div style="display:flex; gap:0.6rem;">
+            <span class="pill-count" style="background:rgba(76,195,138,0.12); color:#1d6e4a; border-color:rgba(76,195,138,0.35);">A favor {{ admin_summary.horas_a_favor|hhmm }}</span>
+            <span class="pill-count pending">Deuda {{ admin_summary.horas_deuda|hhmm }}</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="widget-grid">
+      <article class="widget">
+        <div class="pill-header" style="align-items:flex-start;">
+          <div>
+            <p class="tag">Equipo</p>
+            <h3 style="margin:0;">Colaboradores conectados</h3>
+            <p class="quiet-label">Indicadores semanales en tiempo real</p>
+          </div>
+        </div>
+        <div class="stacked-list" style="margin-top:0.9rem;">
+          {% for item in collaborator_cards %}
+          {% set completion = (item.summary.horas_trabajadas / item.summary.horas_esperadas * 100) if item.summary.horas_esperadas else 0 %}
+          <div class="list-row" style="grid-template-columns: 1fr auto; padding:0.6rem 0.75rem;">
+            <div class="list-row__main">
+              <div>
+                <p class="tag" style="margin:0;">{{ item.collaborator.collaborator_id }}</p>
+                <h3 style="margin:0.25rem 0 0; font-size:1rem;">{{ item.collaborator.full_name }}</h3>
+                <p class="quiet-label">Saldo {{ item.balance.horas_a_favor|hhmm }} · Avance {{ completion|round(0) }}%</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+              <span class="indicator-pill {{ item.indicator }}">{{ item.indicator }}</span>
+              {% if active_collaborator and active_collaborator.collaborator_id == item.collaborator.collaborator_id %}
+              <a class="ghost-link" href="/colaborador/{{ item.collaborator.collaborator_id }}">Portal →</a>
+              {% else %}
+              <a class="ghost-link" href="{{ url_for('login') }}?next={{ item.collaborator.collaborator_id }}">Ingresar →</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="widget">
+        <div class="pill-header">
+          <div>
+            <p class="tag">Rendimiento</p>
+            <h3 style="margin:0;">Barras por colaborador</h3>
+            <p class="quiet-label">Altura = % de horas marcadas</p>
+          </div>
+        </div>
+        <div class="bar-chart">
+          {% for item in collaborator_cards %}
+          {% set completion = (item.summary.horas_trabajadas / item.summary.horas_esperadas * 100) if item.summary.horas_esperadas else 0 %}
+          {% set tone = 'blue' %}
+          {% if completion >= 100 %}{% set tone = 'green' %}{% elif completion < 70 %}{% set tone = 'amber' %}{% endif %}
+          <div>
+            <div class="bar" data-tone="{{ tone }}" style="height: {{ [completion, 100]|min }}%;"></div>
+            <div class="bar-label">{{ item.collaborator.collaborator_id }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+      <article class="widget">
+        <p class="tag">Calendario</p>
+        <h3 style="margin:0;">Feriados y eventos</h3>
+        <p class="quiet-label">Tarjetas limpias estilo referencia</p>
+        {% if holidays or calendar %}
+        <ul style="list-style:none; padding:0; margin-top:0.9rem; display:flex; flex-direction:column; gap:0.45rem;">
+          {% for holiday in holidays %}
+          <li class="chip-row" style="background:var(--blue-50); border:1px solid rgba(63,122,255,0.15); box-shadow:var(--shadow-soft);">{{ holiday.day }} · {{ holiday.name }}</li>
+          {% endfor %}
+          {% for event in calendar %}
+          <li class="chip-row" style="box-shadow:var(--shadow-soft);">{{ event.start }} → {{ event.end }} · {{ event.title }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="quiet-label" style="margin-top:0.9rem;">No hay eventos registrados.</p>
+        {% endif %}
+      </article>
+      <article class="widget">
+        <p class="tag">Comunicados</p>
+        <h3 style="margin:0;">Anuncios internos</h3>
+        <p class="quiet-label">Vacaciones aprobadas, deadlines y avisos del equipo</p>
+        <ul class="clean-list" style="margin-top:0.8rem;">
+          {% for ann in announcements %}
+          <li class="notify {{ ann.category.value }}" style="margin:0;">{{ ann.title }} · {{ ann.body }}</li>
+          {% else %}
+          <li class="muted">Sin comunicados.</li>
+          {% endfor %}
+        </ul>
+      </article>
+    </div>
+
+    <section class="card" style="margin-top:0.5rem;">
+      <div class="pill-header">
+        <div>
+          <p class="tag">Accesos y roles</p>
+          <h2 style="margin:0;">Solicitudes de acceso</h2>
+          <p class="page-subtitle">Colocadas al final del panel, con la distribución limpia solicitada.</p>
+        </div>
+        <div style="display:flex; gap:0.4rem;">
+          <span class="pill-count">{{ access_counts.total }} usuarios</span>
+          <span class="pill-count pending">{{ access_counts.pending }} pendientes</span>
+        </div>
+      </div>
+      {% if access_requests %}
+      <div class="stacked-list">
+        {% for req in access_requests %}
+        <article class="access-item" style="border-radius:20px;">
+          <div class="access-user">
+            <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+            <div>
+              <div class="access-name">{{ req.collaborator_name }}</div>
+              <div class="access-sub">
+                <span>{{ req.email }}</span>
+                <span>• {{ req.collaborator_id }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="access-status">
+            {% set status_class = 'gray' %}
+            {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
+            <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
+            <p class="micro-copy">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
+          </div>
+          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="access-actions">
+            <select name="role">
+              <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+              <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+            </select>
+            <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
+            <div class="access-buttons">
+              <button type="submit" name="action" value="approve">Aprobar</button>
+              <button type="submit" name="action" value="deny" class="button-ghost">Denegar</button>
+            </div>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:#475569;">No hay solicitudes de acceso registradas.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
