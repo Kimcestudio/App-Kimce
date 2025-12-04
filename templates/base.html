@@ -1308,6 +1308,10 @@
         {% elif active_collaborator %}
         <div class="nav-group">
           <div class="nav-label">Colaborador</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_dashboard' else '' }}" href="{{ url_for('collaborator_dashboard') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></svg>
+            <span>Mi dashboard</span>
+          </a>
           <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_view' else '' }}" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
             <span>Mi portal</span>

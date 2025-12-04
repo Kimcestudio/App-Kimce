@@ -219,6 +219,14 @@ def format_hhmm(value):
 
 @app.route("/")
 def home() -> str:
+    logged_id = session.get("collaborator_id")
+    if logged_id and logged_id in collaborator_portals:
+        collaborator = collaborators_by_email.get(
+            collaborator_portals[logged_id].collaborator.email.lower()
+        )
+        if collaborator and collaborator.role != Role.ADMIN:
+            return redirect(url_for("collaborator_dashboard"))
+
     week_start = _current_week_start()
     collaborator_cards = []
     for portal in collaborator_portals.values():
@@ -303,10 +311,9 @@ def login():  # type: ignore[override]
             return redirect(url_for("login"))
         session["collaborator_id"] = collaborator.collaborator_id
         flash("Sesión iniciada", "success")
-        destination = collaborator.collaborator_id
-        if next_id and next_id == collaborator.collaborator_id:
-            destination = next_id
-        return redirect(url_for("collaborator_view", collaborator_id=destination))
+        if collaborator.role == Role.ADMIN:
+            return redirect(url_for("home"))
+        return redirect(url_for("collaborator_dashboard"))
     return render_template("login.html", next_id=next_id)
 
 
@@ -368,6 +375,43 @@ def collaborator_profile(collaborator_id: str) -> str:
         upcoming_requests=sorted(upcoming, key=lambda r: r.payload.get("inicio")),
         RequestType=RequestType,
         notifications=admin_portal.list_notifications(collaborator_id),
+    )
+
+
+@app.route("/mi-dashboard")
+def collaborator_dashboard() -> str:
+    collaborator_id = session.get("collaborator_id")
+    if not collaborator_id or collaborator_id not in collaborator_portals:
+        flash("Inicia sesión para ver tu dashboard.", "info")
+        return redirect(url_for("login", next=collaborator_id))
+
+    portal = collaborator_portals[collaborator_id]
+    collaborator = portal.collaborator
+    week_start = _current_week_start()
+    summary = portal.week_summary(week_start)
+    balance = portal.balance_overview()
+    indicator = portal.weekly_indicator(week_start)
+    pending_requests = [
+        req for req in portal.request_history() if req.status == RequestStatus.PENDING
+    ]
+    today = date.today()
+    month_events = admin_portal.calendar_for_collaborator(
+        collaborator_id, today.month, today.year
+    )
+    upcoming_events = [
+        ev for ev in month_events if ev.start.date() >= today
+    ]
+
+    return render_template(
+        "dashboard_collaborator.html",
+        collaborator=collaborator,
+        summary=summary,
+        balance=balance,
+        indicator=indicator,
+        pending_requests=pending_requests,
+        upcoming_events=sorted(upcoming_events, key=lambda e: e.start),
+        notifications=admin_portal.list_notifications(collaborator_id),
+        today=today,
     )
 
 
