@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% set page_title = 'Mi perfil' %}
+{% block content %}
+<section class="profile-layout">
+  <aside class="profile-sidebar">
+    <div class="hero" style="padding:1rem; box-shadow:none; border:none; background:transparent;">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <div class="avatar" style="width:64px; height:64px;">{{ collaborator.full_name[0] }}</div>
+        <div>
+          <p class="quiet-label" style="margin:0;">{{ collaborator.collaborator_id }}</p>
+          <h2 style="margin:0;">{{ collaborator.full_name }}</h2>
+          <p class="page-subtitle" style="margin:0;">{{ collaborator.position or 'Puesto no asignado' }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="info-grid" style="margin-top:0.75rem;">
+      <div class="stat-card" style="margin:0;">
+        <p class="stat-label">Rol</p>
+        <p class="stat-value">{{ collaborator.role.value|title }}</p>
+      </div>
+      <div class="stat-card" style="margin:0;">
+        <p class="stat-label">Modalidad</p>
+        <p class="stat-value">{{ collaborator.modality.value.replace('_',' ') }}</p>
+      </div>
+      <div class="stat-card" style="margin:0;">
+        <p class="stat-label">Antigüedad</p>
+        <p class="stat-value">{{ collaborator.start_date or 'N/D' }}</p>
+      </div>
+      <div class="stat-card" style="margin:0;">
+        <p class="stat-label">Saldo</p>
+        <p class="stat-value">+{{ balance.horas_a_favor|hhmm }} / -{{ balance.horas_deuda|hhmm }}</p>
+      </div>
+    </div>
+    <div style="margin-top:1rem; display:grid; gap:0.4rem;">
+      <div class="list-row" style="padding:0;">
+        <div class="list-row__main">
+          <div>
+            <p class="quiet-label" style="margin:0;">Área</p>
+            <strong>{{ collaborator.area or 'Área pendiente' }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="list-row" style="padding:0;">
+        <div class="list-row__main">
+          <div>
+            <p class="quiet-label" style="margin:0;">Contacto</p>
+            <p class="page-subtitle" style="margin:0;">{{ collaborator.email }}</p>
+            <p class="page-subtitle" style="margin:0;">{{ collaborator.phone or 'Teléfono pendiente' }}</p>
+          </div>
+        </div>
+      </div>
+      <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id) }}">Ir a mi calendario</a>
+    </div>
+  </aside>
+
+  <div class="profile-main">
+    <div class="card" id="resumen">
+      <div class="pill-header">
+        <div>
+          <p class="quiet-label" style="margin:0;">Estado semanal</p>
+          <h3 style="margin:0;">Horas y balance</h3>
+        </div>
+        <span class="status-chip green">{{ summary.horas_trabajadas|hhmm }} / {{ summary.horas_esperadas|hhmm }}</span>
+      </div>
+      <div class="info-grid">
+        <div class="stat-card" style="margin:0;">
+          <p class="stat-label">Trabajadas</p>
+          <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+        </div>
+        <div class="stat-card" style="margin:0;">
+          <p class="stat-label">Esperadas</p>
+          <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+        </div>
+        <div class="stat-card" style="margin:0;">
+          <p class="stat-label">Horas extra</p>
+          <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
+        </div>
+        <div class="stat-card" style="margin:0;">
+          <p class="stat-label">Saldo</p>
+          <p class="stat-value">+{{ balance.horas_a_favor|hhmm }} / -{{ balance.horas_deuda|hhmm }}</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="pill-header" style="margin:0.75rem 0; gap:0.5rem; flex-wrap:wrap;">
+      <a class="pill-count" href="#info">Información</a>
+      <a class="pill-count" href="#documentos">Documentos</a>
+      <a class="pill-count" href="#rendimiento">KPI</a>
+      <a class="pill-count" href="#evaluaciones">Evaluaciones</a>
+      <a class="pill-count" href="#eventos">Eventos</a>
+      <a class="pill-count" href="#notificaciones">Notificaciones</a>
+    </nav>
+
+    <div class="card" id="info">
+      <h3 style="margin-top:0;">Información laboral</h3>
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Modalidad</p>
+            <strong>{{ collaborator.modality.value.replace('_',' ') }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Inicio de contrato</p>
+            <strong>{{ collaborator.start_date or 'N/D' }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Correo</p>
+            <strong>{{ collaborator.email }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Teléfono</p>
+            <strong>{{ collaborator.phone or 'Pendiente' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <section class="card" id="documentos" style="margin:0;">
+        <h3 style="margin-top:0;">Documentos</h3>
+        {% if collaborator.documents %}
+        <ul class="clean-list">
+          {% for doc in collaborator.documents %}
+          <li class="list-row">
+            <div class="list-row__main">
+              <div>
+                <p class="tag ghost">{{ doc.kind }}</p>
+                <h4 style="margin:0;">{{ doc.name }}</h4>
+                <p class="page-subtitle">{{ doc.version }} · {{ doc.uploaded_at.strftime('%d/%m/%Y') }}{% if doc.notes %} · {{ doc.notes }}{% endif %}</p>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="page-subtitle">Aún no tienes documentos cargados.</p>
+        {% endif %}
+      </section>
+
+      <section class="card" id="rendimiento" style="margin:0;">
+        <h3 style="margin-top:0;">KPI y rendimiento</h3>
+        {% if collaborator.kpis %}
+        <table>
+          <thead><tr><th>Periodo</th><th>Trab.</th><th>Esp.</th><th>Puntualidad</th><th>Proyectos</th><th>Quali</th></tr></thead>
+          <tbody>
+            {% for kpi in collaborator.kpis %}
+            <tr>
+              <td>{{ kpi.period }}</td>
+              <td>{{ kpi.hours_worked|round(1) }}</td>
+              <td>{{ kpi.hours_expected|round(1) }}</td>
+              <td>{{ kpi.punctuality }}%</td>
+              <td>{{ kpi.project_compliance }}%</td>
+              <td>{{ kpi.qualitative_score }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="page-subtitle">Sin KPIs registrados.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <section class="card" id="evaluaciones" style="margin:0;">
+        <h3 style="margin-top:0;">Evaluaciones</h3>
+        {% if collaborator.evaluations %}
+        <div class="stacked-list">
+          {% for ev in collaborator.evaluations %}
+          <article class="list-row">
+            <div class="list-row__main">
+              <p class="tag ghost">{{ ev.period }}</p>
+              <div>
+                <h4 style="margin:0;">Score {{ ev.score or 'N/D' }} · {{ ev.reviewer or 'Líder' }}</h4>
+                <p class="page-subtitle">Auto: {{ ev.self_review or 'N/D' }}</p>
+                <p class="page-subtitle">Líder: {{ ev.leader_review or 'N/D' }}</p>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="page-subtitle">Aún no tienes evaluaciones.</p>
+        {% endif %}
+      </section>
+
+      <section class="card" id="eventos" style="margin:0;">
+        <h3 style="margin-top:0;">Próximos eventos</h3>
+        {% if upcoming_requests %}
+        <div class="stacked-list">
+          {% for req in upcoming_requests %}
+          <article class="list-row">
+            <div class="list-row__main">
+              <p class="tag ghost">{{ req.request_type.value|title }}</p>
+              <div>
+                <h4 style="margin:0;">{{ req.payload.get('inicio')[:10] }} → {{ req.payload.get('fin')[:10] }}</h4>
+                <p class="page-subtitle">Aprobado por {{ req.reviewer or 'Admin' }}</p>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="page-subtitle">No tienes eventos próximos.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <section class="card" id="notificaciones" style="margin:0;">
+      <h3 style="margin-top:0;">Notificaciones</h3>
+      <ul class="clean-list">
+        {% for note in notifications %}
+        <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+        {% else %}
+        <li class="muted">Sin avisos por ahora.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</section>
+{% endblock %}
