@@ -11,6 +11,11 @@
         Vista neumórfica, azul Kimce con acentos verdes/ámbar y módulos aireados que replican el dashboard de referencia,
         ahora con gráficos suaves y métricas semanales en HH:MM.
       </p>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a class="pill-button" href="{{ url_for('admin_view') }}#equipo">Ir a Equipo →</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#calendario">Ver calendario →</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#solicitudes">Solicitudes →</a>
+      </div>
       <div class="panel-grid" style="margin-top:1.1rem; align-items:center;">
         <article class="widget">
           <div class="pill-header">
@@ -51,6 +56,7 @@
               <p class="stat-value">{{ holidays|length + calendar|length }}</p>
             </div>
           </div>
+          <a class="ghost-link" href="{{ url_for('admin_view') }}#equipo" style="margin-top:0.4rem;">Detalle de horas →</a>
         </article>
         <article class="widget" style="display:grid; place-items:center; gap:0.6rem; text-align:center;">
           <p class="tag">Cumplimiento</p>
@@ -88,11 +94,8 @@
             </div>
             <div style="display:flex; gap:0.4rem; align-items:center;">
               <span class="indicator-pill {{ item.indicator }}">{{ item.indicator }}</span>
-              {% if active_collaborator and active_collaborator.collaborator_id == item.collaborator.collaborator_id %}
-              <a class="ghost-link" href="/colaborador/{{ item.collaborator.collaborator_id }}">Portal →</a>
-              {% else %}
-              <a class="ghost-link" href="{{ url_for('login') }}?next={{ item.collaborator.collaborator_id }}">Ingresar →</a>
-              {% endif %}
+              <a class="ghost-link" href="{{ url_for('collaborator_profile', collaborator_id=item.collaborator.collaborator_id) }}">Perfil →</a>
+              <a class="ghost-link" href="{{ url_for('collaborator_calendar', collaborator_id=item.collaborator.collaborator_id) }}">Calendario →</a>
             </div>
           </div>
           {% endfor %}
@@ -131,6 +134,7 @@
           <li class="chip-row" style="box-shadow:var(--shadow-soft);">{{ event.start }} → {{ event.end }} · {{ event.title }}</li>
           {% endfor %}
         </ul>
+        <a class="ghost-link" href="{{ url_for('admin_view') }}#calendario">Ver calendario completo →</a>
         {% else %}
         <p class="quiet-label" style="margin-top:0.9rem;">No hay eventos registrados.</p>
         {% endif %}
