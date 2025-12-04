@@ -205,7 +205,11 @@ def inject_session_data():
     notifications: List[Notification] = []
     if collaborator:
         notifications = admin_portal.list_notifications(collaborator.collaborator_id)
-    return {"active_collaborator": collaborator, "notification_feed": notifications}
+    return {
+        "active_collaborator": collaborator,
+        "notification_feed": notifications,
+        "Role": Role,
+    }
 
 
 @app.template_filter("hhmm")
@@ -515,12 +519,24 @@ def admin_view() -> str:
     today = date.today()
     calendar = admin_portal.build_calendar(today.month, today.year)
     access_list = sorted(access_requests.values(), key=lambda req: req.created_at, reverse=True)
+    week_start = _current_week_start()
+    team_cards = []
+    for portal in collaborator_portals.values():
+        team_cards.append(
+            {
+                "collaborator": portal.collaborator,
+                "summary": portal.week_summary(week_start),
+                "balance": portal.balance_overview(),
+                "indicator": portal.weekly_indicator(week_start),
+            }
+        )
     return render_template(
         "admin.html",
         requests=pending,
         calendar=calendar,
         summary=admin_portal.hours_balance_summary(),
         holidays=admin_portal.list_holidays(),
+        team_cards=team_cards,
         access_requests=access_list,
         access_counts={
             "total": len(access_list),

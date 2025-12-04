@@ -1263,42 +1263,85 @@
           <div class="brand__mark">KS</div>
           <div>
             <div class="brand__title">Kimce Studio</div>
-            <div class="brand__subtitle">Dashboard</div>
+            <div class="brand__subtitle">Operación</div>
           </div>
         </div>
+        {% if active_collaborator and active_collaborator.role == Role.ADMIN %}
         <div class="nav-group">
-          <div class="nav-label">Panel</div>
+          <div class="nav-label">Admin</div>
           <a class="nav-link {{ 'active' if request.endpoint == 'home' else '' }}" href="{{ url_for('home') }}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="m3 9 9-7 9 7v11a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5H9v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" /></svg>
             <span>Dashboard</span>
           </a>
-          <a class="nav-link {{ 'active' if request.endpoint == 'admin_view' else '' }}" href="{{ url_for('admin_view') }}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="2"/><rect x="14" y="4" width="7" height="7" rx="2"/><rect x="3" y="13" width="7" height="7" rx="2"/><rect x="14" y="13" width="7" height="7" rx="2"/></svg>
-            <span>Admin</span>
+          <a class="nav-link" href="{{ url_for('admin_view') }}#equipo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            <span>Equipo</span>
           </a>
-          <a class="nav-link {{ 'active' if request.endpoint == 'admin_view' else '' }}" href="{{ url_for('admin_view') }}#calendario">
+          <a class="nav-link" href="{{ url_for('admin_view') }}#calendario">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>
             <span>Calendario</span>
           </a>
-          <a class="nav-link {{ 'active' if request.endpoint == 'admin_view' else '' }}" href="{{ url_for('admin_view') }}#accesos">
+          <a class="nav-link" href="{{ url_for('admin_view') }}#solicitudes">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/></svg>
+            <span>Solicitudes</span>
+          </a>
+          <a class="nav-link" href="{{ url_for('admin_view') }}#feriados">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/><path d="M8 15h2"/><path d="M14 15h2"/></svg>
+            <span>Feriados y vacaciones</span>
+          </a>
+          <a class="nav-link" href="{{ url_for('admin_view') }}#accesos">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M4 21v-1a7 7 0 0 1 7-7h2a7 7 0 0 1 7 7v1"/></svg>
-            <span>Accesos</span>
+            <span>Accesos y roles</span>
           </a>
         </div>
-        {% if active_collaborator %}
         <div class="nav-group">
-          <div class="nav-label">Mi espacio</div>
+          <div class="nav-label">Cuenta</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_profile' else '' }}" href="{{ url_for('collaborator_profile', collaborator_id=active_collaborator.collaborator_id) }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+            <span>Mi perfil</span>
+          </a>
+          <a class="nav-link" href="{{ url_for('logout') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17 15 12 10 7"/><path d="M15 12H3"/></svg>
+            <span>Salir</span>
+          </a>
+        </div>
+        {% elif active_collaborator %}
+        <div class="nav-group">
+          <div class="nav-label">Colaborador</div>
           <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_view' else '' }}" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
             <span>Mi portal</span>
+          </a>
+          <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_calendar' else '' }}" href="{{ url_for('collaborator_calendar', collaborator_id=active_collaborator.collaborator_id) }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M17 14h-6M17 18h-4M9 14H7"/></svg>
+            <span>Mi calendario</span>
+          </a>
+          <a class="nav-link" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}#solicitudes">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/></svg>
+            <span>Solicitudes</span>
           </a>
           <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_profile' else '' }}" href="{{ url_for('collaborator_profile', collaborator_id=active_collaborator.collaborator_id) }}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z"/><path d="M15 21H3a6 6 0 0 1 8.4-5.5"/><path d="M17 17v5"/><path d="M14 20h6"/></svg>
             <span>Mi perfil</span>
           </a>
-          <a class="nav-link {{ 'active' if request.endpoint == 'collaborator_calendar' else '' }}" href="{{ url_for('collaborator_calendar', collaborator_id=active_collaborator.collaborator_id) }}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M17 14h-6M17 18h-4M9 14H7"/></svg>
-            <span>Mi calendario</span>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">Cuenta</div>
+          <a class="nav-link" href="{{ url_for('logout') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17 15 12 10 7"/><path d="M15 12H3"/></svg>
+            <span>Salir</span>
+          </a>
+        </div>
+        {% else %}
+        <div class="nav-group">
+          <div class="nav-label">Explora</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'home' else '' }}" href="{{ url_for('home') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="m3 9 9-7 9 7v11a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5H9v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" /></svg>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-link" href="{{ url_for('login') }}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17 15 12 10 7"/><path d="M15 12H3"/></svg>
+            <span>Iniciar sesión</span>
           </a>
         </div>
         {% endif %}
@@ -1338,7 +1381,9 @@
                 </ul>
               </div>
             </details>
-            <a class="pill-button" href="{{ url_for('admin_view') }}">Admin</a>
+            {% if active_collaborator and active_collaborator.role == Role.ADMIN %}
+            <a class="pill-button" href="{{ url_for('admin_view') }}">Panel admin</a>
+            {% endif %}
             {% if active_collaborator %}
             <a class="pill-button" href="{{ url_for('collaborator_view', collaborator_id=active_collaborator.collaborator_id) }}">Mi portal</a>
             <a class="pill-button" href="{{ url_for('collaborator_profile', collaborator_id=active_collaborator.collaborator_id) }}">Mi perfil</a>

@@ -54,7 +54,7 @@
   </aside>
 
   <div class="profile-main">
-    <div class="card">
+    <div class="card" id="resumen">
       <div class="pill-header">
         <div>
           <p class="quiet-label" style="margin:0;">Estado semanal</p>
@@ -82,8 +82,47 @@
       </div>
     </div>
 
+    <nav class="pill-header" style="margin:0.75rem 0; gap:0.5rem; flex-wrap:wrap;">
+      <a class="pill-count" href="#info">Información</a>
+      <a class="pill-count" href="#documentos">Documentos</a>
+      <a class="pill-count" href="#rendimiento">KPI</a>
+      <a class="pill-count" href="#evaluaciones">Evaluaciones</a>
+      <a class="pill-count" href="#eventos">Eventos</a>
+      <a class="pill-count" href="#notificaciones">Notificaciones</a>
+    </nav>
+
+    <div class="card" id="info">
+      <h3 style="margin-top:0;">Información laboral</h3>
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Modalidad</p>
+            <strong>{{ collaborator.modality.value.replace('_',' ') }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Inicio de contrato</p>
+            <strong>{{ collaborator.start_date or 'N/D' }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Correo</p>
+            <strong>{{ collaborator.email }}</strong>
+          </div>
+        </div>
+        <div class="list-row" style="padding:0;">
+          <div class="list-row__main">
+            <p class="quiet-label" style="margin:0;">Teléfono</p>
+            <strong>{{ collaborator.phone or 'Pendiente' }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-      <section class="card" style="margin:0;">
+      <section class="card" id="documentos" style="margin:0;">
         <h3 style="margin-top:0;">Documentos</h3>
         {% if collaborator.documents %}
         <ul class="clean-list">
@@ -104,7 +143,7 @@
         {% endif %}
       </section>
 
-      <section class="card" style="margin:0;">
+      <section class="card" id="rendimiento" style="margin:0;">
         <h3 style="margin-top:0;">KPI y rendimiento</h3>
         {% if collaborator.kpis %}
         <table>
@@ -126,8 +165,10 @@
         <p class="page-subtitle">Sin KPIs registrados.</p>
         {% endif %}
       </section>
+    </div>
 
-      <section class="card" style="margin:0;">
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <section class="card" id="evaluaciones" style="margin:0;">
         <h3 style="margin-top:0;">Evaluaciones</h3>
         {% if collaborator.evaluations %}
         <div class="stacked-list">
@@ -149,7 +190,7 @@
         {% endif %}
       </section>
 
-      <section class="card" style="margin:0;">
+      <section class="card" id="eventos" style="margin:0;">
         <h3 style="margin-top:0;">Próximos eventos</h3>
         {% if upcoming_requests %}
         <div class="stacked-list">
@@ -169,18 +210,18 @@
         <p class="page-subtitle">No tienes eventos próximos.</p>
         {% endif %}
       </section>
-
-      <section class="card" style="margin:0;">
-        <h3 style="margin-top:0;">Notificaciones</h3>
-        <ul class="clean-list">
-          {% for note in notifications %}
-          <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
-          {% else %}
-          <li class="muted">Sin avisos por ahora.</li>
-          {% endfor %}
-        </ul>
-      </section>
     </div>
+
+    <section class="card" id="notificaciones" style="margin:0;">
+      <h3 style="margin-top:0;">Notificaciones</h3>
+      <ul class="clean-list">
+        {% for note in notifications %}
+        <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+        {% else %}
+        <li class="muted">Sin avisos por ahora.</li>
+        {% endfor %}
+      </ul>
+    </section>
   </div>
 </section>
 {% endblock %}
