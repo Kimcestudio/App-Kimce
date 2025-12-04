@@ -530,11 +530,22 @@ def admin_view() -> str:
                 "indicator": portal.weekly_indicator(week_start),
             }
         )
+    summary_totals = {
+        "horas_trabajadas": 0.0,
+        "horas_esperadas": 0.0,
+        "horas_extra": 0.0,
+    }
+    for card in team_cards:
+        summary_totals["horas_trabajadas"] += card["summary"].get("horas_trabajadas", 0.0)
+        summary_totals["horas_esperadas"] += card["summary"].get("horas_esperadas", 0.0)
+        summary_totals["horas_extra"] += card["summary"].get("horas_extra", 0.0)
+    summary = admin_portal.hours_balance_summary()
+    summary.update(summary_totals)
     return render_template(
         "admin.html",
         requests=pending,
         calendar=calendar,
-        summary=admin_portal.hours_balance_summary(),
+        summary=summary,
         holidays=admin_portal.list_holidays(),
         team_cards=team_cards,
         access_requests=access_list,
