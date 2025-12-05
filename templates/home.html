@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="dashboard-main">
+<div class="dashboard-main admin-board">
   {% set expected = admin_summary.horas_esperadas %}
   {% set worked = admin_summary.horas_trabajadas %}
   {% set completion = (worked / expected * 100) if expected else 0 %}
+  {% set completion_class = 'green' if completion >= 90 else 'amber' if completion >= 70 else 'red' %}
 
-  <div class="grid two-cols">
+  <section class="grid two-cols">
     <article class="card welcome-card">
       <div>
         <p class="tag">Dashboard admin</p>
-        <h1>Hola, {{ active_collaborator.full_name if active_collaborator else 'Equipo Kimce' }} 👋</h1>
-        <p class="page-subtitle">Aquí tienes tu resumen de hoy: horas del equipo, solicitudes y eventos prioritarios.</p>
+        <h1>Hola, {{ active_collaborator.full_name if active_collaborator else 'Ana Pérez' }} 👋</h1>
+        <p class="page-subtitle">Este es el estado general del equipo y tus pendientes de administración.</p>
+        <p class="quiet-label">Revisa horas, solicitudes, accesos y eventos importantes.</p>
         <div class="chip-row" style="margin-top:0.8rem; gap:0.5rem;">
           <span class="status-chip green">{{ active_today|length }} activos ahora</span>
           <span class="status-chip amber">{{ pending_requests|length }} solicitudes</span>
@@ -25,9 +27,9 @@
         <div>
           <p class="tag">Semana del equipo</p>
           <h3 style="margin:0;">Horas trabajadas vs esperadas</h3>
-          <p class="quiet-label">Formato HH:MM · curva suave</p>
+          <p class="quiet-label">Curva suave · HH:MM</p>
         </div>
-        <div class="pill-count">{{ completion|round(1) }}% cumplimiento</div>
+        <div class="pill-count {{ completion_class }}">{{ completion|round(1) }}% cumplimiento</div>
       </div>
       <div class="line-chart soft" aria-hidden="true">
         <svg viewBox="0 0 320 140" preserveAspectRatio="none">
@@ -59,10 +61,13 @@
           <p class="stat-value">{{ admin_summary.horas_a_favor|hhmm }}</p>
         </div>
       </div>
+      <div class="progress-track">
+        <div class="progress-fill {{ completion_class }}" style="width: {{ completion|round(0) }}%"></div>
+      </div>
     </article>
-  </div>
+  </section>
 
-  <div class="grid two-cols">
+  <section class="grid two-cols">
     <article class="card">
       <div class="pill-header">
         <div>
@@ -152,9 +157,9 @@
         {% endfor %}
       </div>
     </article>
-  </div>
+  </section>
 
-  <div class="grid two-cols">
+  <section class="grid two-cols">
     <article class="card">
       <div class="pill-header">
         <div>
@@ -164,10 +169,12 @@
         </div>
       </div>
       <div class="quick-actions">
-        <a class="pill-button" href="{{ url_for('admin_view') }}#solicitudes">Revisar solicitudes</a>
-        <a class="pill-button" href="{{ url_for('admin_view') }}#accesos">Revisar accesos</a>
+        <a class="pill-button {% if pending_requests %}alert{% endif %}" href="{{ url_for('admin_view') }}#solicitudes">Revisar solicitudes</a>
+        <a class="pill-button {% if access_counts.pending %}alert{% endif %}" href="{{ url_for('admin_view') }}#accesos">Revisar accesos</a>
         <a class="pill-button" href="{{ url_for('admin_view') }}#feriados">Crear feriado</a>
         <a class="pill-button" href="{{ url_for('admin_view') }}#calendario">Asignar vacaciones</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#calendario">Crear evento interno</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#equipo">Editar horario semanal del equipo</a>
       </div>
     </article>
 
@@ -202,9 +209,9 @@
         </div>
       </div>
     </article>
-  </div>
+  </section>
 
-  <div class="grid two-cols">
+  <section class="grid two-cols">
     <article class="card">
       <div class="pill-header">
         <div>
@@ -265,7 +272,7 @@
         {% endfor %}
       </div>
     </article>
-  </div>
+  </section>
 
   <section class="card" id="accesos">
     <div class="pill-header">
