@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumb">
+  <a class="ghost-link" href="/">← Inicio</a>
+  <span>/</span>
+  <span>Portal del colaborador</span>
+</div>
+<section class="page-header">
+  <div>
+    <h1>{{ collaborator.full_name }}</h1>
+    <p class="page-subtitle">ID {{ collaborator.collaborator_id }}{% if collaborator.position %} · {{ collaborator.position }}{% endif %}</p>
+  </div>
+  <span class="indicator-pill {{ indicator }}">{{ indicator }}</span>
+</section>
+<section class="stat-grid" style="margin-bottom:2rem;">
+  <div class="stat-card">
+    <p class="stat-label">Horas trabajadas</p>
+    <p class="stat-value">{{ summary.horas_trabajadas|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas esperadas</p>
+    <p class="stat-value">{{ summary.horas_esperadas|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas extra</p>
+    <p class="stat-value">{{ summary.horas_extra|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas faltantes</p>
+    <p class="stat-value">{{ summary.horas_faltantes|hhmm }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Horas a favor</p>
+    <p class="stat-value">{{ balance.horas_a_favor|hhmm }}</p>
+  </div>
+</section>
+<section class="card" id="solicitudes" style="margin-bottom:2rem;">
+  <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items:flex-start;">
+    <div>
+      <h3>Notificaciones</h3>
+      <ul class="clean-list">
+        {% for note in notifications %}
+        <li class="notify {{ note.category.value }}">{{ note.message }} · {{ note.created_at.strftime('%d/%m %H:%M') }}</li>
+        {% else %}
+        <li class="muted">Sin avisos por ahora.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div>
+      <h3>Calendario</h3>
+      <p class="page-subtitle">Revisa tus vacaciones, feriados y actividades extra con un layout tipo Google Calendar.</p>
+      <a class="pill-button" href="{{ url_for('collaborator_calendar', collaborator_id=collaborator.collaborator_id) }}">Abrir calendario</a>
+    </div>
+  </div>
+</section>
+<section class="card" style="margin-bottom:2rem;">
+  <div class="page-header" style="align-items:flex-start;">
+    <div>
+      <h2>Marcaciones rápidas</h2>
+      <p class="page-subtitle">{{ today.strftime('%A %d %B %Y')|title }}</p>
+    </div>
+    {% set status_class = 'gray' %}
+    {% set status_label = 'Fuera de jornada' %}
+    {% if today_entry and today_entry.ongoing_break_start %}
+      {% set status_class = 'amber' %}
+      {% set status_label = 'En descanso' %}
+    {% elif today_entry and today_entry.check_in and not today_entry.check_out %}
+      {% set status_class = 'green' %}
+      {% set status_label = 'En jornada' %}
+    {% elif action_state.entrada %}
+      {% set status_label = 'Pendiente de entrada' %}
+    {% elif action_state.bloqueado %}
+      {% set status_label = 'Jornada cerrada' %}
+    {% endif %}
+    <span class="status-chip {{ status_class }}">{{ status_label }}</span>
+  </div>
+  <form method="post" action="/colaborador/{{ collaborator.collaborator_id }}/marcar">
+    <label>
+      Observación (opcional)
+      <input type="text" name="note" placeholder="Ej. Activación con cliente" />
+    </label>
+    <div class="quick-actions">
+      <button class="btn-entry" type="submit" name="action" value="entrada" {% if not action_state.entrada %}disabled{% endif %}>
+        Fichar entrada
+      </button>
+      <button class="btn-break-start" type="submit" name="action" value="descanso_inicio" {% if not action_state.descanso_inicio %}disabled{% endif %}>
+        Iniciar descanso
+      </button>
+      <button class="btn-break-end" type="submit" name="action" value="descanso_fin" {% if not action_state.descanso_fin %}disabled{% endif %}>
+        Fin descanso
+      </button>
+      <button class="btn-exit" type="submit" name="action" value="salida" {% if not action_state.salida %}disabled{% endif %}>
+        Fichar salida
+      </button>
+    </div>
+    {% if action_state.bloqueado %}
+    <p class="action-hint">Ya registraste tu salida de hoy. Las nuevas marcaciones estarán disponibles mañana.</p>
+    {% endif %}
+    <div style="margin-top:1rem; padding:0.85rem 1rem; border:1px solid #e2e8f0; border-radius:0.9rem; background: var(--slate-50);">
+      <p class="page-subtitle" style="margin:0 0 0.5rem 0;">Línea de tiempo</p>
+      {% if today_entry %}
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.25rem; color:#1f2937;">
+        {% if today_entry.check_in %}<li>• {{ today_entry.check_in.strftime('%H:%M') }} · Entrada</li>{% endif %}
+        {% for period in today_entry.break_periods %}
+        <li>• {{ period[0].strftime('%H:%M') }} - {{ period[1].strftime('%H:%M') }} · Descanso</li>
+        {% endfor %}
+        {% if today_entry.ongoing_break_start %}<li>• {{ today_entry.ongoing_break_start.strftime('%H:%M') }} · Descanso en curso</li>{% endif %}
+        {% if today_entry.check_out %}<li>• {{ today_entry.check_out.strftime('%H:%M') }} · Salida</li>{% endif %}
+      </ul>
+      {% else %}
+      <p style="margin:0; color:#475569;">Sin eventos hoy.</p>
+      {% endif %}
+    </div>
+  </form>
+</section>
+<section class="card" style="margin-bottom:2rem;">
+  <h2>Solicitudes</h2>
+  <p class="page-subtitle" style="margin-bottom:1rem;">Vacaciones, permisos, horas extra y actividades especiales</p>
+  <form method="post" action="/colaborador/{{ collaborator.collaborator_id }}/solicitud">
+    <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <label>
+        Tipo
+        <select name="request_type" required>
+          {% for option in RequestType %}
+          <option value="{{ option.value }}">{{ option.value }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Inicio
+        <input type="datetime-local" name="start" />
+      </label>
+      <label>
+        Fin
+        <input type="datetime-local" name="end" />
+      </label>
+      <label>
+        Horas (extra o uso de saldo)
+        <input type="number" step="0.5" name="hours" />
+      </label>
+      <label>
+        Actividad especial
+        <input type="text" name="activity" placeholder="Activación / evento" />
+      </label>
+      <label>
+        Notas
+        <textarea name="notes" rows="2"></textarea>
+      </label>
+    </div>
+    <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+      <button type="submit">Enviar solicitud</button>
+    </div>
+  </form>
+  <h3 style="margin-top:2rem;">Historial</h3>
+  {% if requests %}
+  <table>
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Estado</th>
+        <th>Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for req in requests %}
+      <tr>
+        <td>{{ req[0].value }}</td>
+        <td>{{ req[1].value }}</td>
+        <td><pre style="white-space:pre-wrap; font-size:0.85rem; margin:0;">{{ req[2]|tojson(indent=2) }}</pre></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#475569;">No hay solicitudes todavía.</p>
+  {% endif %}
+</section>
+<section class="card">
+  <h2>Marcaciones recientes</h2>
+  {% if entries %}
+  <table>
+    <thead>
+      <tr>
+        <th>Día</th>
+        <th>Entrada</th>
+        <th>Descansos</th>
+        <th>Salida</th>
+        <th>Notas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr>
+        <td>{{ entry.day }}</td>
+        <td>{{ entry.check_in.strftime('%Y-%m-%d %H:%M') if entry.check_in else '-' }}</td>
+        <td>
+          {% if entry.break_periods %}
+          <ul class="pill-list">
+            {% for period in entry.break_periods %}
+            <li><span class="tag ghost">{{ period[0].strftime('%H:%M') }} - {{ period[1].strftime('%H:%M') }}</span></li>
+            {% endfor %}
+          </ul>
+          {% elif entry.ongoing_break_start %}
+          <span class="tag ghost">{{ entry.ongoing_break_start.strftime('%H:%M') }} - en curso</span>
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>{{ entry.check_out.strftime('%Y-%m-%d %H:%M') if entry.check_out else '-' }}</td>
+        <td>{{ entry.notes|join(', ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#475569;">Aún no registraste marcaciones.</p>
+  {% endif %}
+</section>
+{% endblock %}

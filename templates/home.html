@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-main admin-board stack-gap-lg">
+  {% set expected = admin_summary.horas_esperadas %}
+  {% set worked = admin_summary.horas_trabajadas %}
+  {% set completion = (worked / expected * 100) if expected else 0 %}
+  {% set completion_class = 'green' if completion >= 90 else 'amber' if completion >= 70 else 'red' %}
+
+  <section class="grid-12">
+    <article class="card col-span-7 welcome-card" style="grid-template-columns: 1fr;">
+      <p class="tag">Dashboard admin</p>
+      <h1>Hola, {{ active_collaborator.full_name if active_collaborator else 'Ana Pérez' }} 👋</h1>
+      <p class="page-subtitle">Este es el estado general del equipo y tus pendientes de administración.</p>
+      <p class="quiet-label">Revisa horas, solicitudes, accesos y eventos importantes.</p>
+      <div class="welcome-chip-row">
+        <span class="welcome-chip green">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+          {{ active_today|length }} activos ahora
+        </span>
+        <span class="welcome-chip amber">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          {{ pending_requests|length }} solicitudes
+        </span>
+        <span class="welcome-chip blue">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 3l-7.5 7.5"/><path d="M17 21H6a2 2 0 0 1-2-2V8"/><path d="M3 21l7.5-7.5"/></svg>
+          {{ access_counts.pending }} accesos pendientes
+        </span>
+      </div>
+    </article>
+    <article class="card col-span-5" style="display:grid; align-items:center; background: radial-gradient(circle at 20% 30%, rgba(63,122,255,0.16), rgba(255,255,255,0.92));">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+        <div>
+          <p class="tag">Kimce Studio</p>
+          <h3 style="margin:0;">Gestiona tu equipo con claridad</h3>
+          <p class="quiet-label">Controla horarios, solicitudes y eventos desde un solo lugar.</p>
+        </div>
+        <div style="width:120px; height:120px; border-radius:22px; background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(219,231,255,0.9)); border:1px solid rgba(63,122,255,0.14); box-shadow: var(--shadow-soft); display:grid; place-items:center;">
+          <svg class="icon" viewBox="0 0 64 64" fill="none" stroke="#3f7aff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:72px; height:72px;">
+            <rect x="8" y="16" width="48" height="36" rx="10" ry="10" fill="rgba(63,122,255,0.06)" />
+            <path d="M18 30h16M18 38h10M38 38h8" />
+            <circle cx="42" cy="26" r="4" fill="rgba(63,122,255,0.16)" />
+          </svg>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-12">
+    <article class="card col-span-12 gradient" style="padding-bottom:1.8rem;">
+      <div class="pill-header" style="align-items:flex-start;">
+        <div>
+          <p class="tag">Semana del equipo</p>
+          <h3 style="margin:0; font-size:1.25rem;">Horas trabajadas vs esperadas</h3>
+          <p class="quiet-label">Curva suave · HH:MM</p>
+        </div>
+        <div class="pill-count {{ completion_class }}">{{ completion|round(1) }}% cumplimiento</div>
+      </div>
+      <div class="line-chart soft" aria-hidden="true" style="height: 200px;">
+        <svg viewBox="0 0 320 160" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lineGradientAdmin" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#3f7aff" stop-opacity="0.5" />
+              <stop offset="100%" stop-color="#3f7aff" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <path d="M0 130 C60 90 90 110 140 80 S220 40 270 70 320 30 320 30" fill="none" stroke="#3f7aff" stroke-width="3.5" stroke-linecap="round" />
+          <path d="M0 130 C60 90 90 110 140 80 S220 40 270 70 320 30 320 30" fill="url(#lineGradientAdmin)" stroke="none" opacity="0.28" />
+        </svg>
+      </div>
+      <div class="stat-grid" style="margin-top:0.9rem;">
+        <div class="stat-card">
+          <p class="stat-label">Trabajadas</p>
+          <p class="stat-value">{{ worked|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Esperadas</p>
+          <p class="stat-value">{{ expected|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Horas extra</p>
+          <p class="stat-value">{{ admin_summary.horas_extra|hhmm }}</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Saldo</p>
+          <p class="stat-value">{{ admin_summary.horas_a_favor|hhmm }}</p>
+        </div>
+      </div>
+      <div class="progress-track" style="margin-top:1rem;">
+        <div class="progress-fill {{ completion_class }}" style="width: {{ completion|round(0) }}%"></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-12">
+    <article class="card col-span-6">
+      <div class="pill-header">
+        <div class="pill-title">
+          <span class="icon bg">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V5a2 2 0 0 0-2-2h-5.4a2 2 0 0 0-1.4.6L4.6 10.2a2 2 0 0 0-.6 1.4V19a2 2 0 0 0 2 2h10"/><path d="M3 12l9-9"/><path d="M15 16l3 3 3-3"/></svg>
+          </span>
+          <div>
+            <p class="tag">Notificaciones importantes</p>
+            <h3 style="margin:0;">Pendientes y avisos</h3>
+          </div>
+        </div>
+        <a class="ghost-link" href="{{ url_for('admin_view') }}#solicitudes">Ver todas →</a>
+      </div>
+      <div class="stacked-list">
+        {% for req in pending_requests[:3] %}
+        <div class="list-row" style="align-items:flex-start;">
+          <div class="list-row__main">
+            <p class="tag" style="margin:0;">{{ req.request_type.value }}</p>
+            <h4 style="margin:0.2rem 0 0;">{{ collaborators.get(req.collaborator_id).full_name if collaborators.get(req.collaborator_id) else req.collaborator_id }}</h4>
+            <p class="quiet-label">{{ req.payload.get('inicio', 'Sin fecha') }}</p>
+          </div>
+          <span class="status-chip amber">Pendiente</span>
+        </div>
+        {% endfor %}
+        {% for ann in announcements[:3] %}
+        <div class="list-row" style="align-items:flex-start;">
+          <div class="list-row__main">
+            <p class="tag" style="margin:0;">Anuncio</p>
+            <h4 style="margin:0.2rem 0 0;">{{ ann.title }}</h4>
+            <p class="quiet-label">{{ ann.body }}</p>
+          </div>
+          <span class="status-chip blue">Info</span>
+        </div>
+        {% endfor %}
+        {% if pending_requests|length == 0 and announcements|length == 0 %}
+        <p class="muted">Sin notificaciones nuevas.</p>
+        {% endif %}
+      </div>
+    </article>
+
+    <article class="card col-span-6" id="mini-calendar">
+      <div class="pill-header">
+        <div>
+          <p class="tag">Calendario rápido</p>
+          <h3 style="margin:0;">Mes en curso</h3>
+          <p class="quiet-label">Fichajes, feriados, vacaciones y eventos.</p>
+        </div>
+        <a class="ghost-link" href="{{ url_for('admin_view') }}#calendario">Calendario completo →</a>
+      </div>
+      <div class="mini-calendar-grid">
+        {% for week in month_grid %}
+        <div class="mini-week">
+          {% for day in week %}
+          {% set events = events_by_day.get(day, []) %}
+          <button type="button" class="day-cell {% if day == today %}selected{% endif %} {% if day.month != today.month %}muted{% endif %}" data-day-select="{{ day.isoformat() }}">
+            <span class="day-number">{{ day.day }}</span>
+            {% if events %}<span class="dot-set">{% for _ in range(events|length if events|length < 3 else 3) %}<span class="dot"></span>{% endfor %}</span>{% endif %}
+            <small>{{ events|length }} eventos</small>
+          </button>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="day-detail-panels">
+        {% for week in month_grid %}
+          {% for day in week %}
+          {% set events = events_by_day.get(day, []) %}
+          {% set totals = day_totals.get(day) %}
+          <div class="day-detail {% if day == today %}active{% endif %}" data-day-panel="{{ day.isoformat() }}">
+            <div class="chip-row" style="justify-content:space-between;">
+              <strong>{{ day.strftime('%d %b %Y') }}</strong>
+              <span class="status-chip blue">{{ events|length }} eventos</span>
+            </div>
+            <p class="quiet-label">Horas del equipo: {{ totals.worked|hhmm }} / {{ totals.expected|hhmm }}</p>
+            <ul class="clean-list" style="margin-top:0.5rem;">
+              {% for ev in events %}
+              <li class="list-row" style="padding:0.35rem 0;">
+                <div class="list-row__main">
+                  <p class="tag" style="margin:0;">{{ ev.collaborator_id or 'Equipo' }}</p>
+                  <strong>{{ ev.title }}</strong>
+                  <p class="quiet-label">{{ ev.start.strftime('%d/%m %H:%M') }} - {{ ev.end.strftime('%d/%m %H:%M') }}</p>
+                </div>
+                <span class="ghost-link">Ver →</span>
+              </li>
+              {% else %}
+              <li class="muted">Sin eventos para este día.</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-12">
+    <article class="card col-span-6">
+      <div class="pill-header">
+        <div class="pill-title">
+          <span class="icon bg">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M18 9l-6-4-6 4"/><path d="M6 15l6 4 6-4"/></svg>
+          </span>
+          <div>
+            <p class="tag">Acciones rápidas</p>
+            <h3 style="margin:0;">Tareas de hoy</h3>
+          </div>
+        </div>
+      </div>
+      <div class="quick-actions" style="gap:0.65rem;">
+        <a class="pill-button {% if pending_requests %}alert{% endif %}" href="{{ url_for('admin_view') }}#solicitudes">Revisar solicitudes</a>
+        <a class="pill-button {% if access_counts.pending %}alert{% endif %}" href="{{ url_for('admin_view') }}#accesos">Revisar accesos</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#feriados">Crear feriado</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#calendario">Asignar vacaciones</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#calendario">Crear evento interno</a>
+        <a class="pill-button" href="{{ url_for('admin_view') }}#equipo">Editar horario semanal del equipo</a>
+      </div>
+    </article>
+
+    <article class="card col-span-6">
+      <div class="pill-header">
+        <div class="pill-title">
+          <span class="icon bg">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </span>
+          <div>
+            <p class="tag">KPIs rápidos</p>
+            <h3 style="margin:0;">Estado del equipo</h3>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="donut" style="--percent: {{ completion|round(1) }};"><span>{{ completion|round(0) }}%</span></div>
+          <p class="quiet-label">Horas marcadas</p>
+        </div>
+        <div class="kpi">
+          <div class="donut amber" style="--percent: {{ requests_completion }};"><span>{{ requests_completion }}%</span></div>
+          <p class="quiet-label">Solicitudes completadas</p>
+        </div>
+        <div class="kpi">
+          {% set online = active_today|length %}
+          {% set total = collaborator_cards|length %}
+          {% set online_pct = (online / total * 100) if total else 0 %}
+          <div class="donut green" style="--percent: {{ online_pct|round(0) }};"><span>{{ online }} / {{ total }}</span></div>
+          <p class="quiet-label">Conectados ahora</p>
+        </div>
+        <div class="kpi">
+          {% set extra_pct = (admin_summary.horas_extra / expected * 100) if expected else 0 %}
+          <div class="donut blue" style="--percent: {{ extra_pct|round(0) }};"><span>{{ admin_summary.horas_extra|hhmm }}</span></div>
+          <p class="quiet-label">Horas extra del mes</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-12">
+    <article class="card col-span-6">
+      <div class="pill-header">
+        <div class="pill-title">
+          <span class="icon bg">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/></svg>
+          </span>
+          <div>
+            <p class="tag">Eventos próximos</p>
+            <h3 style="margin:0;">Activaciones y vacaciones</h3>
+          </div>
+        </div>
+      </div>
+      {% set ns = namespace(events=[]) %}
+      {% for ev in calendar %}
+        {% if ev.start.date() >= today %}
+          {% set ns.events = ns.events + [ev] %}
+        {% endif %}
+      {% endfor %}
+      <div class="stacked-list">
+        {% for ev in ns.events[:4] %}
+        <div class="list-row" style="align-items:flex-start;">
+          <div class="list-row__main">
+            <p class="tag" style="margin:0;">{{ ev.collaborator_id or 'Equipo' }}</p>
+            <h4 style="margin:0.2rem 0 0;">{{ ev.title }}</h4>
+            <p class="quiet-label">{{ ev.start.strftime('%d/%m %H:%M') }} · {{ ev.end.strftime('%d/%m %H:%M') }}</p>
+          </div>
+          <span class="ghost-link">Reprogramar</span>
+        </div>
+        {% else %}
+        <p class="muted">Sin eventos próximos.</p>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="card col-span-6">
+      <div class="pill-header">
+        <div class="pill-title">
+          <span class="icon bg">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h10l6 6v8a2 2 0 0 1-2 2Z"/><path d="M17 21v-8h-5V5"/></svg>
+          </span>
+          <div>
+            <p class="tag">Solicitudes recientes</p>
+            <h3 style="margin:0;">Aprobar o denegar</h3>
+          </div>
+        </div>
+        <a class="ghost-link" href="{{ url_for('admin_view') }}#solicitudes">Ver historial →</a>
+      </div>
+      <div class="stacked-list">
+        {% for req in pending_requests[:5] %}
+        <div class="list-row" style="grid-template-columns:1fr auto; align-items:center;">
+          <div class="list-row__main">
+            <p class="tag" style="margin:0;">{{ req.request_type.value }}</p>
+            <h4 style="margin:0.2rem 0 0;">{{ collaborators.get(req.collaborator_id).full_name if collaborators.get(req.collaborator_id) else req.collaborator_id }}</h4>
+            <p class="quiet-label">{{ req.payload.get('inicio', 'Sin fecha') }}</p>
+          </div>
+          <form method="post" action="{{ url_for('admin_request_decision', collaborator_id=req.collaborator_id) }}" style="display:flex; gap:0.4rem;">
+            <input type="hidden" name="request_id" value="{{ req.request_id }}" />
+            <button class="pill-button" name="action" value="approve">Aprobar</button>
+            <button class="pill-button" name="action" value="deny" style="border-color:rgba(185,28,28,0.35); color:#b91c1c;">Denegar</button>
+          </form>
+        </div>
+        {% else %}
+        <p class="muted">No hay solicitudes pendientes.</p>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-12">
+    <article class="card col-span-12" id="accesos">
+      <div class="pill-header" style="align-items:flex-start;">
+        <div>
+          <p class="tag">Accesos y roles</p>
+          <h2 style="margin:0;">Solicitudes de acceso</h2>
+          <p class="page-subtitle">Ubicadas al final, con layout aireado y controles en línea.</p>
+        </div>
+        <div style="display:flex; gap:0.4rem; align-items:center;">
+          <span class="pill-count">{{ access_counts.total }} usuarios</span>
+          <span class="pill-count pending">{{ access_counts.pending }} pendientes</span>
+        </div>
+      </div>
+      {% if access_requests %}
+      <div class="access-list">
+        {% for req in access_requests %}
+        <article class="access-item" style="grid-template-columns: minmax(260px, 1.2fr) minmax(180px, 1fr) minmax(320px, 1.8fr);">
+          <div class="access-user">
+            <span class="access-avatar">{{ req.collaborator_name[0] }}</span>
+            <div>
+              <div class="access-name">{{ req.collaborator_name }}</div>
+              <div class="access-sub">
+                <span>{{ req.email }}</span>
+                <span>• {{ req.collaborator_id }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="access-status">
+            {% set status_class = 'gray' %}
+            {% if req.status == AccessStatus.PENDING %}{% set status_class = 'amber' %}{% elif req.status == AccessStatus.APPROVED %}{% set status_class = 'green' %}{% endif %}
+            <span class="status-chip {{ status_class }}">{{ req.status.value }}</span>
+            <p class="micro-copy">Creado {{ req.created_at.strftime('%d/%m %H:%M') }}{% if req.updated_at %} · Última revisión {{ req.updated_at.strftime('%d/%m %H:%M') }}{% endif %}</p>
+          </div>
+          <form method="post" action="{{ url_for('admin_access_decision', email=req.email) }}" class="access-actions">
+            <select name="role">
+              <option value="{{ Role.COLLABORATOR.value }}" {% if req.desired_role == Role.COLLABORATOR %}selected{% endif %}>Colaborador</option>
+              <option value="{{ Role.ADMIN.value }}" {% if req.desired_role == Role.ADMIN %}selected{% endif %}>Admin</option>
+            </select>
+            <input type="text" name="position" value="{{ req.position or '' }}" placeholder="Puesto" />
+            <div class="access-buttons">
+              <button type="submit" name="action" value="approve">Aprobar</button>
+              <button type="submit" name="action" value="deny" class="button-ghost">Denegar</button>
+            </div>
+          </form>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted">No hay solicitudes de acceso registradas.</p>
+      {% endif %}
+    </article>
+  </section>
+</div>
+
+<script>
+  const dayButtons = document.querySelectorAll('[data-day-select]');
+  const dayPanels = document.querySelectorAll('[data-day-panel]');
+  dayButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-day-select');
+      dayButtons.forEach((b) => b.classList.toggle('selected', b === btn));
+      dayPanels.forEach((panel) => panel.classList.toggle('active', panel.getAttribute('data-day-panel') === target));
+    });
+  });
+</script>
+{% endblock %}

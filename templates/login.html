@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="tag">Accesos</p>
+  <h1>Inicia sesión con tu correo Kimce</h1>
+  <p>
+    Cada colaborador se valida con su email corporativo. Si es tu primer ingreso, enviaremos una
+    solicitud al panel admin para que autoricen o rechacen tu acceso.
+  </p>
+</section>
+<section class="card" style="max-width:520px; margin:2rem auto;">
+  <h2>Autenticación</h2>
+  <form method="post" action="{{ url_for('login') }}" style="display:flex; flex-direction:column; gap:1rem;">
+    <label>
+      Correo corporativo
+      <input type="email" name="email" required placeholder="tucorreo@kimce.studio" />
+    </label>
+    {% if next_id %}
+    <input type="hidden" name="next" value="{{ next_id }}" />
+    {% endif %}
+    <button type="submit">Continuar</button>
+  </form>
+  <p style="margin-top:1rem; font-size:0.9rem; color:#475569;">
+    ¿Necesitas ayuda? Contacta al equipo admin para actualizar tu correo o estado de acceso.
+  </p>
+</section>
+{% endblock %}
