@@ -210,3 +210,26 @@ Para que los colaboradores ingresen desde cualquier lugar, despliega `webapp.py`
 4. Una vez desplegado, comparte la URL pública que entrega la plataforma (por ejemplo `https://kimce-demo.onrender.com`).
 
 Puedes replicar la misma receta en Fly.io, Dokku u otro servidor Linux siempre que expongas el puerto HTTP, apuntes un dominio y uses HTTPS (Cloudflare o Let’s Encrypt) para proteger las credenciales.
+
+## Portal web Next.js (Sprint 1)
+
+Se agregó un portal moderno en `web/` con Next.js (App Router), NextAuth y Firestore (admin SDK) como base de la nueva arquitectura solicitada. Incluye layout con sidebar, roles, rutas protegidas y un MVP funcional para asistencia, solicitudes y calendario.
+
+### Requisitos
+
+- Node.js 18+
+- Variables de entorno en `web/.env` (puedes copiar `web/.env.example`).
+
+### Ejecutar en local
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Luego abre <http://localhost:3000>.
+
+> Si no configuras credenciales de Firebase, el login funciona con usuarios demo en memoria:
+> - admin@kimce.studio
+> - luis@kimce.studio

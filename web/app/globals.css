@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+.card {
+  @apply rounded-3xl bg-white shadow-soft;
+}
+
+.badge {
+  @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium;
+}
+
+.badge-success {
+  @apply bg-emerald-50 text-emerald-600;
+}
+
+.badge-warning {
+  @apply bg-amber-50 text-amber-600;
+}
+
+.badge-info {
+  @apply bg-kimce-50 text-kimce-600;
+}
+
+.badge-danger {
+  @apply bg-rose-50 text-rose-600;
+}
+
+.section-title {
+  @apply text-base font-semibold text-slate-900;
+}
+
+.subtitle {
+  @apply text-sm text-slate-500;
+}
+
+.pill-button {
+  @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition hover:shadow-md;
+}
+
+.pill-primary {
+  @apply bg-kimce-600 text-white hover:bg-kimce-700;
+}
+
+.pill-secondary {
+  @apply bg-slate-100 text-slate-700 hover:bg-slate-200;
+}
+
+.pill-warning {
+  @apply bg-amber-100 text-amber-700 hover:bg-amber-200;
+}
+
+.pill-success {
+  @apply bg-emerald-100 text-emerald-700 hover:bg-emerald-200;
+}
+
+.pill-danger {
+  @apply bg-rose-100 text-rose-700 hover:bg-rose-200;
+}
